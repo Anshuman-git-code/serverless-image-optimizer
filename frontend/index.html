@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Optimization Pipeline</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Optimization Pipeline</h1>
+            <p>Professional image processing with automated resizing and compression</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section id="upload-section" class="card">
+                <h2>Upload Image</h2>
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">⬆️</div>
+                    <p>Drag and drop your image here or click to browse</p>
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                    <button id="browse-btn" class="btn btn-primary">Select Image</button>
+                </div>
+                <div id="file-info" class="file-info hidden">
+                    <p><strong>Selected File:</strong> <span id="filename"></span></p>
+                    <p><strong>Size:</strong> <span id="filesize"></span></p>
+                    <button id="upload-btn" class="btn btn-success">Upload & Process</button>
+                    <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </section>
+
+            <!-- Processing Section -->
+            <section id="processing-section" class="card hidden">
+                <h2>Processing...</h2>
+                <div class="loader"></div>
+                <p id="processing-message">Uploading your image...</p>
+                <div class="progress-bar">
+                    <div id="progress" class="progress-fill"></div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="card hidden">
+                <h2>Processing Complete</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <h3>Original File</h3>
+                        <p id="original-filename"></p>
+                    </div>
+                    <div class="result-item">
+                        <h3>Processing Time</h3>
+                        <p id="processing-time"></p>
+                    </div>
+                    <div class="result-item">
+                        <h3>Space Saved</h3>
+                        <p id="compression-ratio"></p>
+                    </div>
+                </div>
+
+                <h3>Download Processed Images</h3>
+                <div class="download-grid">
+                    <div class="download-card">
+                        <h4>1080p (Full HD)</h4>
+                        <p class="resolution-info">1920x1080</p>
+                        <p class="file-size" id="size-1080p">Loading...</p>
+                        <a id="download-1080p" class="btn btn-download" href="#" target="_blank">Download</a>
+                    </div>
+                    <div class="download-card">
+                        <h4>720p (HD)</h4>
+                        <p class="resolution-info">1280x720</p>
+                        <p class="file-size" id="size-720p">Loading...</p>
+                        <a id="download-720p" class="btn btn-download" href="#" target="_blank">Download</a>
+                    </div>
+                    <div class="download-card">
+                        <h4>480p (SD)</h4>
+                        <p class="resolution-info">854x480</p>
+                        <p class="file-size" id="size-480p">Loading...</p>
+                        <a id="download-480p" class="btn btn-download" href="#" target="_blank">Download</a>
+                    </div>
+                </div>
+
+                <button id="upload-another-btn" class="btn btn-primary">Upload Another Image</button>
+            </section>
+
+            <!-- Error Section -->
+            <section id="error-section" class="card error-card hidden">
+                <h2>Error</h2>
+                <p id="error-message"></p>
+                <button id="try-again-btn" class="btn btn-primary">Try Again</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Image Optimization Pipeline. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
