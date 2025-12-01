@@ -21,7 +21,7 @@ This project provides an automated solution for image optimization, perfect for 
 - **Cost-Effective**: $0 cost (within AWS Free Tier)
 
 ## 🏗️ Architecture
-<img width="1359" height="488" alt="Screenshot 2025-12-01 at 10 28 01 AM" src="https://github.com/user-attachments/assets/04ac23d7-5794-4a4b-9c25-b13dff4b50f6" />
+<img width="1335" height="341" alt="Screenshot 2025-12-01 at 10 36 19 AM" src="https://github.com/user-attachments/assets/854b7474-8087-4da0-8687-5d42b5dff8d1" />
 
 
 ## 🚀 Live Demo
