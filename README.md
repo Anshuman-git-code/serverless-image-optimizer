@@ -6,6 +6,12 @@ A serverless image processing pipeline built on AWS that automatically optimizes
 ![AWS](https://img.shields.io/badge/AWS-Lambda%20%7C%20S3%20%7C%20API%20Gateway-orange)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 
+
+
+
+https://github.com/user-attachments/assets/285b102d-56ad-4823-ab6a-4d55efba47cd
+
+
 ## 🎯 Overview
 
 This project provides an automated solution for image optimization, perfect for CMS systems, portfolios, blogs, and e-commerce platforms. Upload high-resolution images and receive optimized versions in multiple resolutions (1080p, 720p, 480p) with 90-98% file size reduction.
