@@ -1,7 +1,9 @@
 import boto3
 import json
+import os
 
 s3 = boto3.client("s3")
+INPUT_BUCKET = os.environ.get("INPUT_BUCKET", "image-pipeline-input-sid")
 
 def lambda_handler(event, context):
     """
@@ -21,7 +23,7 @@ def lambda_handler(event, context):
     url = s3.generate_presigned_url(
         "put_object",
         Params={
-            "Bucket": "image-pipeline-input-sid",
+            "Bucket": INPUT_BUCKET,
             "Key": filename
         },
         ExpiresIn=900  # 15 minutes

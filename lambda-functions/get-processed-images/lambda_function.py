@@ -1,8 +1,10 @@
 import boto3
 import json
+import os
 
 s3 = boto3.client("s3")
 resolutions = ["1080p", "720p", "480p"]
+OUTPUT_BUCKET = os.environ.get("OUTPUT_BUCKET", "image-pipeline-output-sid")
 
 def lambda_handler(event, context):
     """
@@ -16,7 +18,7 @@ def lambda_handler(event, context):
         Pre-signed S3 download URLs for all resolutions (1 hour expiry)
     """
     filename = event["pathParameters"]["filename"]
-    bucket = "image-pipeline-output-sid"
+    bucket = OUTPUT_BUCKET
     
     output = {}
 

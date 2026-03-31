@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://38hmfok3uk.execute-api.ap-south-1.amazonaws.com/prod';
+const API_BASE_URL = 'https://6vk04wd8h5.execute-api.ap-south-1.amazonaws.com/prod';
 
 // DOM Elements
 const uploadArea = document.getElementById('upload-area');
