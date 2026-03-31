@@ -33,7 +33,7 @@ This project provides an automated solution for image optimization, perfect for 
 
 ## 🚀 Live Demo
 
-**Frontend URL**: [http://image-pipeline-frontend-sid.s3-website.ap-south-1.amazonaws.com](http://image-pipeline-frontend-anshuman.s3-website.ap-south-1.amazonaws.com/)
+http://image-pipeline-frontend-anshuman.s3-website.ap-south-1.amazonaws.com/
 
 ## 📊 Performance
 
