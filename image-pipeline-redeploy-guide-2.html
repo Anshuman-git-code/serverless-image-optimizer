@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Optimization Pipeline — Interview Redeployment Guide</title>
+<style>
+  :root {
+    --blue:#2563eb;--blue-light:#eff6ff;--blue-dark:#1e40af;
+    --green:#059669;--green-light:#ecfdf5;
+    --orange:#d97706;--orange-light:#fffbeb;
+    --red:#dc2626;--red-light:#fef2f2;
+    --purple:#7c3aed;--purple-light:#f5f3ff;
+    --teal:#0d9488;--teal-light:#f0fdfa;
+    --gray:#6b7280;--gray-light:#f9fafb;--gray-border:#e5e7eb;
+    --text:#111827;--text-muted:#6b7280;--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:var(--text);line-height:1.7;}
+
+  .hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0d9488 100%);color:white;padding:3rem 2rem 2.5rem;text-align:center;}
+  .hero h1{font-size:2.2rem;font-weight:800;letter-spacing:-0.03em;}
+  .hero .subtitle{font-size:1.05rem;opacity:.85;margin-top:.5rem;}
+  .badge-row{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.2rem;}
+  .badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:.3rem .9rem;font-size:.8rem;font-weight:600;}
+
+  .wrapper{max-width:980px;margin:0 auto;padding:2rem 1.5rem 5rem;}
+
+  .toc{background:white;border:1px solid var(--gray-border);border-radius:var(--radius);padding:1.5rem 2rem;margin-bottom:2rem;}
+  .toc h2{font-size:.9rem;font-weight:700;color:var(--blue-dark);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.05em;}
+  .toc ol{padding-left:1.4rem;}
+  .toc li{margin-bottom:.4rem;}
+  .toc a{color:var(--blue);text-decoration:none;font-weight:500;font-size:.93rem;}
+  .toc a:hover{text-decoration:underline;}
+
+  .section{background:white;border:1px solid var(--gray-border);border-radius:var(--radius);margin-bottom:2rem;overflow:hidden;}
+  .section-header{display:flex;align-items:center;gap:1rem;padding:1.2rem 1.8rem;border-bottom:1px solid var(--gray-border);background:var(--gray-light);}
+  .section-num{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex-shrink:0;}
+  .section-title{font-size:1.15rem;font-weight:700;color:var(--blue-dark);}
+  .section-body{padding:1.6rem 1.8rem;}
+
+  .step{border:1px solid var(--gray-border);border-radius:8px;margin-bottom:1.8rem;overflow:hidden;}
+  .step-header{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.2rem;background:#f8fafc;border-bottom:1px solid var(--gray-border);}
+  .step-num{background:var(--blue);color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0;}
+  .step-title{font-weight:700;color:var(--text);font-size:1rem;}
+  .step-body{padding:1.2rem 1.4rem;}
+
+  .explain{background:#fafafa;border-left:4px solid var(--blue);border-radius:0 6px 6px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:.92rem;}
+  .explain h5{font-size:.8rem;font-weight:700;color:var(--blue-dark);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+  .explain p{color:#374151;margin-bottom:.5rem;}
+  .explain p:last-child{margin-bottom:0;}
+
+  .why-here{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:0 6px 6px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:.92rem;}
+  .why-here h5{font-size:.8rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+  .why-here p{color:#3b0764;margin-bottom:.5rem;}
+  .why-here p:last-child{margin-bottom:0;}
+
+  .key-diff{background:var(--teal-light);border-left:4px solid var(--teal);border-radius:0 6px 6px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:.92rem;}
+  .key-diff h5{font-size:.8rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;}
+  .key-diff p{color:#134e4a;margin-bottom:.5rem;}
+  .key-diff p:last-child{margin-bottom:0;}
+
+  .cmd-table{width:100%;border-collapse:collapse;font-size:.875rem;margin:.8rem 0;}
+  .cmd-table th{background:#1e293b;color:#e2e8f0;padding:.5rem .9rem;text-align:left;font-weight:700;}
+  .cmd-table td{padding:.55rem .9rem;border-bottom:1px solid var(--gray-border);vertical-align:top;}
+  .cmd-table td:first-child{font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.82rem;background:#f8fafc;color:#0f172a;white-space:nowrap;font-weight:600;}
+  .cmd-table tr:last-child td{border-bottom:none;}
+
+  pre{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:1.1rem 1.3rem;overflow-x:auto;font-size:.84rem;line-height:1.75;margin:.8rem 0;}
+  code{font-family:'Cascadia Code','Fira Code','Consolas',monospace;}
+  .ic{background:#f1f5f9;color:#0f172a;padding:.15em .45em;border-radius:4px;font-size:.87em;font-family:'Cascadia Code','Fira Code','Consolas',monospace;border:1px solid #e2e8f0;}
+
+  .callout{border-radius:8px;padding:1rem 1.2rem;margin:1rem 0;display:flex;gap:.8rem;}
+  .callout-icon{font-size:1.2rem;flex-shrink:0;}
+  .callout-body{font-size:.92rem;}
+  .callout-body strong{display:block;margin-bottom:.3rem;}
+  .tip{background:var(--green-light);border:1px solid #a7f3d0;}
+  .warn{background:var(--orange-light);border:1px solid #fcd34d;}
+  .danger{background:var(--red-light);border:1px solid #fca5a5;}
+  .info{background:var(--blue-light);border:1px solid #bfdbfe;}
+
+  .arch{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:1.5rem 0;}
+  .arch-box{background:var(--blue-light);border:2px solid var(--blue);border-radius:8px;padding:.6rem 1rem;text-align:center;font-size:.82rem;font-weight:700;color:var(--blue-dark);min-width:90px;}
+  .arch-arrow{color:var(--gray);font-size:1.4rem;padding:0 .3rem;}
+
+  .data-table{width:100%;border-collapse:collapse;font-size:.9rem;margin:.8rem 0;}
+  .data-table th{background:var(--blue);color:white;padding:.6rem 1rem;text-align:left;font-weight:700;}
+  .data-table td{padding:.6rem 1rem;border-bottom:1px solid var(--gray-border);vertical-align:top;}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table tr:nth-child(even) td{background:var(--gray-light);}
+
+  .checklist{list-style:none;padding:0;}
+  .checklist li{display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;border-bottom:1px solid var(--gray-border);font-size:.93rem;}
+  .checklist li:last-child{border-bottom:none;}
+  .check-box{width:20px;height:20px;border:2px solid var(--gray-border);border-radius:4px;flex-shrink:0;margin-top:2px;background:white;}
+  .phase-label{font-size:.72rem;background:var(--blue);color:white;border-radius:999px;padding:.1rem .5rem;font-weight:700;flex-shrink:0;margin-top:3px;}
+
+  .tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  @media(max-width:600px){.tips-grid{grid-template-columns:1fr;}}
+  .tip-card{background:var(--green-light);border:1px solid #a7f3d0;border-radius:8px;padding:1rem;}
+  .tip-card h4{font-size:.9rem;font-weight:700;color:var(--green);margin-bottom:.4rem;}
+  .tip-card p{font-size:.87rem;color:#065f46;}
+
+  hr{border:none;border-top:1px solid var(--gray-border);margin:1.2rem 0;}
+  .footer{text-align:center;padding:2rem;color:var(--gray);font-size:.85rem;}
+  .sequence-note{background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:.9rem 1.1rem;font-size:.88rem;color:#713f12;margin-bottom:1.2rem;}
+  .sequence-note strong{color:#92400e;}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.8rem 0;}
+  @media(max-width:600px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{border:1px solid var(--gray-border);border-radius:8px;padding:1rem;}
+  .compare-card h5{font-weight:700;margin-bottom:.5rem;font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🖼️ Image Optimization Pipeline</h1>
+  <div class="subtitle">Interview Redeployment Guide — Every step explained with full context</div>
+  <div class="badge-row">
+    <span class="badge">AWS Lambda</span><span class="badge">S3 (3 Buckets)</span>
+    <span class="badge">API Gateway REST</span><span class="badge">Python 3.11</span>
+    <span class="badge">Pillow / PIL</span><span class="badge">Pre-signed URLs</span>
+    <span class="badge">S3 Event Triggers</span>
+  </div>
+</div>
+
+<div class="wrapper">
+
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#vs-linkforge">How This Differs from LinkForge</a></li>
+    <li><a href="#architecture">Architecture Overview</a></li>
+    <li><a href="#prereqs">Prerequisites &amp; One-time Setup</a></li>
+    <li><a href="#phase1">Phase 1 — S3 Buckets (3 buckets)</a></li>
+    <li><a href="#phase2">Phase 2 — IAM Role for Lambda</a></li>
+    <li><a href="#phase3">Phase 3 — Lambda Functions (3 functions)</a></li>
+    <li><a href="#phase4">Phase 4 — S3 Event Trigger</a></li>
+    <li><a href="#phase5">Phase 5 — API Gateway (REST API)</a></li>
+    <li><a href="#phase6">Phase 6 — Frontend to S3</a></li>
+    <li><a href="#verify">Verification &amp; Testing</a></li>
+    <li><a href="#schema">Data Flow &amp; Key Configs Reference</a></li>
+    <li><a href="#troubleshoot">Troubleshooting</a></li>
+    <li><a href="#checklist">Interview Master Checklist</a></li>
+    <li><a href="#talking">Talking Points</a></li>
+  </ol>
+</div>
+
+<!-- ═══ SECTION 1 — HOW THIS DIFFERS ═══ -->
+<div class="section" id="vs-linkforge">
+  <div class="section-header"><div class="section-num">1</div><div class="section-title">How This Project Differs from LinkForge — Read First</div></div>
+  <div class="section-body">
+    <div class="explain">
+      <h5>Why read this section?</h5>
+      <p>If you recently deployed LinkForge, your muscle memory will trip you up here. This project uses a completely different architecture pattern. The table below shows where your assumptions will be wrong.</p>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h5 style="color:var(--blue);">LinkForge Pro</h5>
+        <p style="font-size:.88rem;color:var(--text-muted);">CloudFormation creates everything in one command. HTTP API (v2). Lambda wired to API via integrations. Frontend points to API Gateway URL for all operations.</p>
+      </div>
+      <div class="compare-card">
+        <h5 style="color:var(--teal);">Image Optimization Pipeline</h5>
+        <p style="font-size:.88rem;color:var(--text-muted);">No CloudFormation — everything created manually with CLI. REST API (v1). Lambda triggered by S3 events, not API Gateway. Frontend uploads DIRECTLY to S3 (bypasses API Gateway entirely for the actual file).</p>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Aspect</th><th>LinkForge</th><th>Image Pipeline</th></tr></thead>
+      <tbody>
+        <tr><td>IaC</td><td>CloudFormation (1 YAML file)</td><td>Manual CLI commands only — no template</td></tr>
+        <tr><td>API type</td><td>HTTP API v2 (apigatewayv2)</td><td>REST API v1 (apigateway) — different CLI commands</td></tr>
+        <tr><td>Lambda trigger</td><td>API Gateway route → Lambda</td><td>S3 ObjectCreated event → Lambda (automatic, no API route)</td></tr>
+        <tr><td>File upload path</td><td>POST to API → Lambda → DynamoDB</td><td>Frontend → API Gateway → Lambda generates pre-signed URL → Frontend uploads directly to S3</td></tr>
+        <tr><td>S3 buckets</td><td>1 bucket (frontend only)</td><td>3 buckets: input, output, frontend</td></tr>
+        <tr><td>Pillow / PIL</td><td>Not used</td><td>Core dependency — must be bundled in Lambda ZIP or added as a Layer</td></tr>
+        <tr><td>Region</td><td>us-east-1</td><td>ap-south-1 (Mumbai) — all commands must match</td></tr>
+        <tr><td>API CORS</td><td>Configured at API Gateway level in CloudFormation</td><td>Must be manually configured with OPTIONS methods on each resource</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body"><strong>Region is ap-south-1 throughout this project.</strong> Every CLI command needs <span class="ic">--region ap-south-1</span>. The Lambda functions, S3 buckets, and API Gateway are all in Mumbai. If you accidentally deploy to us-east-1, nothing will connect.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SECTION 2 — ARCHITECTURE ═══ -->
+<div class="section" id="architecture">
+  <div class="section-header"><div class="section-num">2</div><div class="section-title">Architecture Overview — Two Separate Flows</div></div>
+  <div class="section-body">
+    <div class="explain">
+      <h5>Why two flows?</h5>
+      <p>This project has an <strong>upload flow</strong> and a <strong>download flow</strong> — and the image processing is fully automated in between, triggered by S3 itself. Understanding that the API Gateway is NOT involved in the actual file transfer is the single most important architectural insight.</p>
+    </div>
+
+    <p style="font-weight:700;margin-bottom:.5rem;font-size:.95rem;">Upload Flow</p>
+    <div class="arch">
+      <div class="arch-box">🌐 Browser</div><div class="arch-arrow">→</div>
+      <div class="arch-box">🚪 API Gateway<br><small>POST /generate-upload-url</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">⚡ Lambda 1<br><small>generate-upload-url</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🗝️ Pre-signed URL<br><small>returned to browser</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🪣 S3 Input<br><small>PUT direct</small></div>
+    </div>
+
+    <p style="font-weight:700;margin-bottom:.5rem;margin-top:1rem;font-size:.95rem;">Auto-Processing Flow (triggered automatically)</p>
+    <div class="arch">
+      <div class="arch-box">🪣 S3 Input<br><small>ObjectCreated event</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">⚡ Lambda 2<br><small>ImageProcessor</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🖼️ Pillow<br><small>resize + compress</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🪣 S3 Output<br><small>1080p/720p/480p</small></div>
+    </div>
+
+    <p style="font-weight:700;margin-bottom:.5rem;margin-top:1rem;font-size:.95rem;">Download Flow</p>
+    <div class="arch">
+      <div class="arch-box">🌐 Browser</div><div class="arch-arrow">→</div>
+      <div class="arch-box">🚪 API Gateway<br><small>GET /processed-images/{filename}</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">⚡ Lambda 3<br><small>get-processed-images</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🗝️ 3 Pre-signed URLs<br><small>1080p/720p/480p</small></div><div class="arch-arrow">→</div>
+      <div class="arch-box">🌐 Browser<br><small>downloads direct</small></div>
+    </div>
+
+    <table class="data-table" style="margin-top:1.2rem;">
+      <thead><tr><th>Resource</th><th>Name / ID</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>S3 Input Bucket</td><td>image-pipeline-input-$SUFFIX</td><td>Receives original uploads via pre-signed PUT URL. Fires S3 event on every new object.</td></tr>
+        <tr><td>S3 Output Bucket</td><td>image-pipeline-output-$SUFFIX</td><td>Stores processed images in 3 subfolders: 1080p/, 720p/, 480p/</td></tr>
+        <tr><td>S3 Frontend Bucket</td><td>image-pipeline-frontend-$SUFFIX</td><td>Static website hosting for index.html, styles.css, app.js</td></tr>
+        <tr><td>Lambda 1</td><td>generate-upload-url</td><td>Generates a 15-minute pre-signed S3 PUT URL. Called by API Gateway.</td></tr>
+        <tr><td>Lambda 2</td><td>ImageProcessorLambda-Shivam</td><td>Downloads image, runs Pillow resize + compress, uploads 3 versions. Triggered by S3 event — never called by API.</td></tr>
+        <tr><td>Lambda 3</td><td>get-processed-images</td><td>Generates 3 pre-signed S3 GET URLs (1 hour). Called by API Gateway.</td></tr>
+        <tr><td>API Gateway</td><td>ImagePipelineAPI (REST v1)</td><td>Two endpoints only — URL generation and URL retrieval. Never touches actual image bytes.</td></tr>
+        <tr><td>IAM Role</td><td>Lambda-Image-Processing-Role</td><td>Grants all 3 Lambda functions permission to read/write S3 and write CloudWatch logs.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ SECTION 3 — PREREQS ═══ -->
+<div class="section" id="prereqs">
+  <div class="section-header"><div class="section-num">3</div><div class="section-title">Prerequisites &amp; Setup</div></div>
+  <div class="section-body">
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Verify AWS CLI and credentials</div></div>
+      <div class="step-body">
+        <pre><code>aws --version          # Need 2.x
+aws sts get-caller-identity   # Confirms credentials work — note the Account ID</code></pre>
+        <div class="explain">
+          <h5>Why check credentials first?</h5>
+          <p>All 6 deployment phases below require AWS CLI access. The Account ID returned here is used when constructing Lambda ARNs for API Gateway integration in Phase 5. Save it: <span class="ic">ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Verify Python and pip</div></div>
+      <div class="step-body">
+        <pre><code>python3 --version     # Need 3.9+
+pip3 --version</code></pre>
+        <div class="explain">
+          <h5>Why Python specifically?</h5>
+          <p>Lambda 2 (ImageProcessor) uses Pillow (PIL) for image processing. When you create the Lambda deployment ZIP, you must install Pillow locally first and bundle it with the code — otherwise Lambda will throw ImportError. Pillow is NOT pre-installed in any Lambda runtime.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Set your region variable — use it everywhere</div></div>
+      <div class="step-body">
+        <pre><code>export REGION="ap-south-1"
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+echo "Region: $REGION | Account: $ACCOUNT_ID"</code></pre>
+        <div class="explain">
+          <h5>Why set these as shell variables?</h5>
+          <p>This project uses ap-south-1 (Mumbai) — NOT us-east-1 like LinkForge. Every aws CLI command in this guide uses <span class="ic">$REGION</span>. If you type the region wrong even once, resources land in different regions and cannot communicate. Setting it once as a variable prevents all typos. The <span class="ic">$ACCOUNT_ID</span> variable is used in Phase 5 when building Lambda function ARNs for API Gateway.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Clone repo and understand the structure</div></div>
+      <div class="step-body">
+        <pre><code>git clone https://github.com/yourusername/image-optimization-pipeline.git
+cd image-optimization-pipeline</code></pre>
+        <div class="explain">
+          <h5>Key files you will be deploying</h5>
+          <p><span class="ic">lambda-functions/generate-upload-url/lambda_function.py</span> — Lambda 1 code (simple, no dependencies)</p>
+          <p><span class="ic">lambda-functions/get-processed-images/lambda_function.py</span> — Lambda 3 code (simple, no dependencies)</p>
+          <p><span class="ic">lambda-functions/image-processor/lambda_function.py</span> — Lambda 2 code (requires Pillow bundled in ZIP)</p>
+          <p><span class="ic">frontend/index.html, styles.css, app.js</span> — the static web app that goes to the frontend S3 bucket</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 4 — PHASE 1: S3 BUCKETS ═══ -->
+<div class="section" id="phase1">
+  <div class="section-header"><div class="section-num">4</div><div class="section-title">Phase 1 — Create 3 S3 Buckets</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why S3 first?</strong> The IAM Role (Phase 2) references bucket ARNs in its permissions. Lambda functions (Phase 3) reference bucket names in their environment variables. The S3 event trigger (Phase 4) is attached to the input bucket. Everything downstream depends on the buckets existing first.
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Global rule for this entire guide — single quotes vs double quotes in zsh/bash:</strong>
+        <br>Many commands below pass JSON to the AWS CLI via <span class="ic">--policy</span>, <span class="ic">--policy-document</span>, <span class="ic">--cors-configuration</span>, etc. The quoting rule is:
+        <br><br>• <strong>No variables inside JSON → single quotes are fine:</strong> <span class="ic">'{"key": "value"}'</span>
+        <br>• <strong>Variables inside JSON → must use double quotes + escape inner quotes:</strong> <span class="ic">"{\"key\": \"${MY_VAR}\"}"</span>
+        <br><br>Single quotes in zsh prevent ALL variable expansion — <span class="ic">'$BUCKET'</span> passes the literal string <span class="ic">$BUCKET</span> to AWS, not your bucket name. This causes <span class="ic">MalformedPolicy</span> errors on IAM and S3 policy commands, and <span class="ic">InvalidParameter</span> errors on notification configs. Every JSON block in this guide that contains a <span class="ic">$VARIABLE</span> reference uses double quotes.
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Create the 3 buckets</div></div>
+      <div class="step-body">
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body"><strong>Set your suffix variable FIRST — you will use it in every command throughout this guide:</strong>
+            <pre><code># Replace "anshuman" with your own name/initials
+export SUFFIX="anshuman"
+export INPUT_BUCKET="image-pipeline-input-$SUFFIX"
+export OUTPUT_BUCKET="image-pipeline-output-$SUFFIX"
+export FRONTEND_BUCKET="image-pipeline-frontend-$SUFFIX"
+echo "$INPUT_BUCKET | $OUTPUT_BUCKET | $FRONTEND_BUCKET"</code></pre>
+            Every subsequent command in this guide uses <span class="ic">$INPUT_BUCKET</span>, <span class="ic">$OUTPUT_BUCKET</span>, and <span class="ic">$FRONTEND_BUCKET</span> — not the hardcoded <span class="ic">-sid</span> names. If you open a new terminal session, re-export these variables before continuing.
+          </div>
+        </div>
+
+        <pre><code># Input bucket — receives original uploaded images
+aws s3api create-bucket \
+  --bucket $INPUT_BUCKET \
+  --region ap-south-1 \
+  --create-bucket-configuration LocationConstraint=ap-south-1
+
+# Output bucket — stores processed images in 1080p/, 720p/, 480p/ folders
+aws s3api create-bucket \
+  --bucket $OUTPUT_BUCKET \
+  --region ap-south-1 \
+  --create-bucket-configuration LocationConstraint=ap-south-1
+
+# Frontend bucket — hosts the static website
+aws s3api create-bucket \
+  --bucket $FRONTEND_BUCKET \
+  --region ap-south-1 \
+  --create-bucket-configuration LocationConstraint=ap-south-1</code></pre>
+
+        <table class="cmd-table">
+          <thead><tr><th>Flag</th><th>What it does and why it's needed</th></tr></thead>
+          <tbody>
+            <tr><td>create-bucket</td><td>Creates an S3 bucket. Bucket names must be globally unique across ALL AWS accounts worldwide — not just your account. The original "-sid" names are already claimed by the original team member Siddhant. You must use your own unique suffix every time you redeploy. <strong>Success response is <span class="ic">{"Location": "http://bucketname.s3.amazonaws.com/"}</span> — this is correct.</strong></td></tr>
+            <tr><td>$INPUT_BUCKET / $OUTPUT_BUCKET / $FRONTEND_BUCKET</td><td>Shell variables set above. Using variables instead of hardcoded names means every downstream command (Lambda env vars, IAM policy, S3 event trigger) automatically uses the same consistent name. One source of truth — change the SUFFIX once and everything cascades correctly.</td></tr>
+            <tr><td>--create-bucket-configuration LocationConstraint=ap-south-1</td><td>Required for all regions EXCEPT us-east-1. Without this flag in ap-south-1, the command fails with an "InvalidLocationConstraint" error. us-east-1 is the default region for S3 and does not need LocationConstraint. Every other region requires it explicitly.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: BucketAlreadyExists for all 3 buckets</strong>
+            <pre><code>An error occurred (BucketAlreadyExists) when calling the CreateBucket operation:
+The requested bucket name is not available. The bucket namespace is shared by
+all users of the system. Please select a different name and try again.</code></pre>
+            <strong>Why it happened:</strong> S3 bucket names are a single global namespace shared across every AWS account on the planet — not just yours. The names <span class="ic">image-pipeline-input-sid</span>, <span class="ic">image-pipeline-output-sid</span>, and <span class="ic">image-pipeline-frontend-sid</span> were created by the original team member (Siddhant) and are permanently claimed in his account. No one else can ever create a bucket with those exact names.
+            <br><br>
+            <strong>Fix — use your own suffix:</strong>
+            <pre><code>export SUFFIX="anshuman"    # ← your name/initials
+export INPUT_BUCKET="image-pipeline-input-$SUFFIX"
+export OUTPUT_BUCKET="image-pipeline-output-$SUFFIX"
+export FRONTEND_BUCKET="image-pipeline-frontend-$SUFFIX"
+
+aws s3api create-bucket --bucket $INPUT_BUCKET \
+  --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
+
+aws s3api create-bucket --bucket $OUTPUT_BUCKET \
+  --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
+
+aws s3api create-bucket --bucket $FRONTEND_BUCKET \
+  --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1</code></pre>
+            <strong>What changed downstream:</strong> Because you changed the bucket names, you must use <span class="ic">$INPUT_BUCKET</span> / <span class="ic">$OUTPUT_BUCKET</span> / <span class="ic">$FRONTEND_BUCKET</span> in every subsequent step — the IAM policy Resource ARNs, Lambda environment variables, S3 event notification, CORS configs, and the frontend website URL. The shell variables handle this automatically as long as they are set in your terminal session.
+            <br><br>
+            <strong>Remember for interviews:</strong> Always use a personal suffix when redeploying any project. Bucket names from a team project are already claimed. The safest pattern: <span class="ic">projectname-purpose-yourname</span>.
+          </div>
+        </div>
+
+        <div class="why-here">
+          <h5>Why 3 separate buckets instead of one?</h5>
+          <p><strong>Input bucket:</strong> Needs PUT permission for pre-signed uploads and fires S3 events. Mixing it with processed images would cause the event trigger to fire on its own outputs — an infinite processing loop.</p>
+          <p><strong>Output bucket:</strong> Needs GET permission for pre-signed downloads. Organized with resolution subfolders (1080p/, 720p/, 480p/) so the get-processed-images Lambda can construct predictable keys.</p>
+          <p><strong>Frontend bucket:</strong> Needs static website hosting enabled with public read. Mixing static site files with image data would be confusing and could accidentally expose images.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Enable static website hosting on the frontend bucket</div></div>
+      <div class="step-body">
+        <pre><code>aws s3 website s3://$FRONTEND_BUCKET/ \
+  --index-document index.html \
+  --error-document index.html \
+  --region ap-south-1</code></pre>
+        <div class="explain">
+          <h5>What does website hosting do?</h5>
+          <p>Normally S3 objects are accessed via the REST API endpoint (e.g. s3.amazonaws.com/bucket/key). With website hosting enabled, S3 creates a separate website endpoint (e.g. bucket.s3-website.ap-south-1.amazonaws.com) that behaves like a web server — it serves index.html for the root URL, handles 404s with the error document, and serves files with correct content-type headers. This is required for a browser to load the app correctly.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Make the frontend bucket publicly readable</div></div>
+      <div class="step-body">
+        <pre><code># Step 3a: Disable block public access (S3 blocks public access by default since 2023)
+aws s3api put-public-access-block \
+  --bucket $FRONTEND_BUCKET \
+  --public-access-block-configuration \
+  BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false \
+  --region ap-south-1
+
+# Step 3b: Attach a bucket policy allowing public GET
+# IMPORTANT: Use double quotes (not single quotes) so ${FRONTEND_BUCKET} expands correctly
+aws s3api put-bucket-policy \
+  --bucket $FRONTEND_BUCKET \
+  --region ap-south-1 \
+  --policy "{
+    \"Version\": \"2012-10-17\",
+    \"Statement\": [{
+      \"Sid\": \"PublicReadGetObject\",
+      \"Effect\": \"Allow\",
+      \"Principal\": \"*\",
+      \"Action\": \"s3:GetObject\",
+      \"Resource\": \"arn:aws:s3:::${FRONTEND_BUCKET}/*\"
+    }]
+  }"</code></pre>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue 1 Hit: zsh: unknown file attribute: 3</strong>
+            <pre><code>zsh: unknown file attribute: 3</code></pre>
+            <strong>Why it happened:</strong> zsh interpreted the number in the <span class="ic">--public-access-block-configuration</span> flag value (BlockPublicAcls=false,...) differently when pasted with the backslash continuation on the same line. This error is harmless — it means zsh got confused about the line break, but the AWS command itself still executed successfully. No AWS error = Step 3a completed fine. You can verify with:
+            <pre><code>aws s3api get-public-access-block --bucket $FRONTEND_BUCKET --region ap-south-1</code></pre>
+            All four values should return <span class="ic">false</span>. The fix in the guide above puts the configuration value on its own indented line without the trailing backslash issue.
+            <br><br>
+            <strong>Issue 2 Hit: MalformedPolicy — Policy has invalid resource</strong>
+            <pre><code>An error occurred (MalformedPolicy) when calling the PutBucketPolicy operation:
+Policy has invalid resource</code></pre>
+            <strong>Why it happened:</strong> The bucket policy JSON was wrapped in <strong>single quotes</strong> (<span class="ic">'...'</span>). In zsh (and bash), single quotes prevent ALL variable expansion — the string <span class="ic">$FRONTEND_BUCKET</span> was passed literally to AWS instead of being expanded to <span class="ic">image-pipeline-frontend-anshuman</span>. AWS received the ARN as <span class="ic">arn:aws:s3:::$FRONTEND_BUCKET/*</span> which is not a valid ARN, so it rejected the policy.
+            <br><br>
+            <strong>The rule — single quotes vs double quotes in shell:</strong>
+            <br>• <span class="ic">'$VAR'</span> → literal string <span class="ic">$VAR</span> (no expansion) — use for static JSON with no variables
+            <br>• <span class="ic">"$VAR"</span> or <span class="ic">"${VAR}"</span> → expands to the variable's value — required whenever your JSON contains shell variables
+            <br><br>
+            <strong>Fix — use double quotes and escape inner quotes with backslashes:</strong>
+            <pre><code>aws s3api put-bucket-policy \
+  --bucket $FRONTEND_BUCKET \
+  --region ap-south-1 \
+  --policy "{
+    \"Version\": \"2012-10-17\",
+    \"Statement\": [{
+      \"Sid\": \"PublicReadGetObject\",
+      \"Effect\": \"Allow\",
+      \"Principal\": \"*\",
+      \"Action\": \"s3:GetObject\",
+      \"Resource\": \"arn:aws:s3:::${FRONTEND_BUCKET}/*\"
+    }]
+  }"</code></pre>
+            <strong>Success response:</strong> No output at all — an empty response from <span class="ic">put-bucket-policy</span> means success. AWS only returns output on failure.
+            <br><br>
+            <strong>Remember for interviews:</strong> This single-quote vs double-quote issue will appear in EVERY step that passes JSON with shell variables to the AWS CLI — the IAM policy (Phase 2), the S3 event notification (Phase 4), and the API Gateway CORS integration responses (Phase 5). Always use double quotes + escaped inner quotes when your JSON contains <span class="ic">$VARIABLE</span> references.
+          </div>
+        </div>
+
+        <div class="explain">
+          <h5>Why two steps for public access?</h5>
+          <p>AWS introduced "Block Public Access" settings in 2018 as a safety guard — even if you add a bucket policy, the block settings override it and prevent public access. You must explicitly disable the block settings first, THEN add the bucket policy. Doing only one of these is a common mistake that results in 403 errors when trying to load the frontend website.</p>
+          <p>The bucket policy uses <span class="ic">Principal: "*"</span> (anyone) and <span class="ic">Action: s3:GetObject</span> (read-only) on all objects (<span class="ic">/*</span>). This allows any browser to fetch HTML/CSS/JS files — which is exactly what a public website needs.</p>
+          <p><strong>How to verify it worked:</strong> <span class="ic">aws s3api get-bucket-policy --bucket $FRONTEND_BUCKET --region ap-south-1</span> — the returned policy should show your bucket name expanded correctly (not <span class="ic">$FRONTEND_BUCKET</span> literally).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Enable CORS on the input bucket (browsers need this for direct PUT)</div></div>
+      <div class="step-body">
+        <pre><code># Use double quotes so $INPUT_BUCKET expands correctly
+aws s3api put-bucket-cors \
+  --bucket $INPUT_BUCKET \
+  --region ap-south-1 \
+  --cors-configuration '{
+    "CORSRules": [{
+      "AllowedOrigins": ["*"],
+      "AllowedMethods": ["PUT", "POST", "GET"],
+      "AllowedHeaders": ["*"],
+      "MaxAgeSeconds": 3000
+    }]
+  }'</code></pre>
+        <div class="callout tip">
+          <div class="callout-icon">✅</div>
+          <div class="callout-body"><strong>Single quotes are safe here</strong> — the CORS JSON contains no shell variables, so single quotes work fine. The bucket name is passed via <span class="ic">--bucket $INPUT_BUCKET</span> (outside the quotes) which does expand correctly. Single quotes are only a problem when variables appear INSIDE the quoted JSON string.</div>
+        </div>
+        <div class="explain">
+          <h5>Why does the input bucket need CORS?</h5>
+          <p>The upload flow works like this: browser calls API Gateway → gets a pre-signed S3 URL → browser then PUTs the file directly to S3 using that URL. This direct S3 PUT comes from the user's browser (a different origin than S3). Browsers enforce CORS — they send a preflight OPTIONS request before every cross-origin PUT. Without CORS configured on the S3 bucket, S3 returns no CORS headers and the browser blocks the upload before it even starts. The actual file never reaches S3.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">Enable CORS on the output bucket (browsers need this for direct GET)</div></div>
+      <div class="step-body">
+        <pre><code>aws s3api put-bucket-cors \
+  --bucket $OUTPUT_BUCKET \
+  --region ap-south-1 \
+  --cors-configuration '{
+    "CORSRules": [{
+      "AllowedOrigins": ["*"],
+      "AllowedMethods": ["GET"],
+      "AllowedHeaders": ["*"],
+      "MaxAgeSeconds": 3000
+    }]
+  }'</code></pre>
+        <div class="explain">
+          <h5>Why does the output bucket also need CORS?</h5>
+          <p>Same reason — when the user clicks "Download", the browser follows the pre-signed URL directly to S3 to fetch the processed image. This is a cross-origin GET from the user's browser. Without CORS on the output bucket, the download button works in some browsers (those that don't enforce CORS on GETs) but fails in others with a CORS error.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 5 — PHASE 2: IAM ROLE ═══ -->
+<div class="section" id="phase2">
+  <div class="section-header"><div class="section-num">5</div><div class="section-title">Phase 2 — Create IAM Role for Lambda</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why before Lambda?</strong> When you run <span class="ic">aws lambda create-function</span> you must supply a <span class="ic">--role</span> ARN at creation time. The role must exist before the function is created. All 3 Lambda functions will share this single role.
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Create the IAM role with Lambda trust policy</div></div>
+      <div class="step-body">
+        <pre><code>aws iam create-role \
+  --role-name Lambda-Image-Processing-Role \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": {"Service": "lambda.amazonaws.com"},
+      "Action": "sts:AssumeRole"
+    }]
+  }'</code></pre>
+        <div class="explain">
+          <h5>What is the trust policy and why does it matter?</h5>
+          <p>An IAM Role by itself grants permissions — but you also need to specify WHO is allowed to use (assume) the role. This "trust policy" is a separate document that says "the Lambda service (lambda.amazonaws.com) is allowed to assume this role." Without it, Lambda cannot pick up the role's permissions when your function runs. This is a frequent point of confusion: permissions policy = what the role CAN do; trust policy = WHO can use the role.</p>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: EntityAlreadyExists — Role already exists</strong>
+            <pre><code>An error occurred (EntityAlreadyExists) when calling the CreateRole operation:
+Role with name Lambda-Image-Processing-Role already exists.</code></pre>
+            <strong>Why it happened:</strong> The IAM role was created during a previous deployment and still exists in your AWS account. IAM roles are global (not region-specific) and persist until explicitly deleted. Unlike S3 buckets where you needed a new suffix, IAM roles with the same name across deployments is fine — you can simply reuse the existing one.
+            <br><br>
+            <strong>Fix — skip create-role and just fetch the existing ARN:</strong>
+            <pre><code>ROLE_ARN=$(aws iam get-role --role-name Lambda-Image-Processing-Role \
+  --query 'Role.Arn' --output text)
+echo $ROLE_ARN</code></pre>
+            Then continue with Steps 2 and 3 (attaching policies). The <span class="ic">attach-role-policy</span> and <span class="ic">put-role-policy</span> commands are safe to re-run on an existing role — they are idempotent (attaching an already-attached policy just returns success silently).
+            <br><br>
+            <strong>Remember for re-deployments:</strong> IAM roles, policies, CloudWatch log groups, and Lambda functions all persist between deployments. Only S3 objects are truly ephemeral. The pattern is: try to create, if EntityAlreadyExists get the existing resource ARN and continue.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Attach CloudWatch Logs permission (built-in AWS policy)</div></div>
+      <div class="step-body">
+        <pre><code>aws iam attach-role-policy \
+  --role-name Lambda-Image-Processing-Role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole</code></pre>
+        <div class="explain">
+          <h5>What does AWSLambdaBasicExecutionRole grant?</h5>
+          <p>This AWS-managed policy grants permission to create CloudWatch log groups, log streams, and write log events. Without it, your Lambda functions run but you cannot see any print() output or error tracebacks in CloudWatch Logs — debugging becomes impossible. This is the minimum policy every Lambda function needs.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Attach S3 read/write permissions (custom inline policy)</div></div>
+      <div class="step-body">
+        <pre><code># IMPORTANT: Use double quotes + escaped inner quotes so $INPUT_BUCKET and $OUTPUT_BUCKET expand
+aws iam put-role-policy \
+  --role-name Lambda-Image-Processing-Role \
+  --policy-name S3ImagePipelineAccess \
+  --policy-document "{
+    \"Version\": \"2012-10-17\",
+    \"Statement\": [
+      {
+        \"Effect\": \"Allow\",
+        \"Action\": [\"s3:GetObject\", \"s3:PutObject\", \"s3:HeadObject\"],
+        \"Resource\": [
+          \"arn:aws:s3:::${INPUT_BUCKET}/*\",
+          \"arn:aws:s3:::${OUTPUT_BUCKET}/*\"
+        ]
+      },
+      {
+        \"Effect\": \"Allow\",
+        \"Action\": \"s3:GeneratePresignedUrl\",
+        \"Resource\": \"*\"
+      }
+    ]
+  }"</code></pre>
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body"><strong>Same single-quote vs double-quote rule applies here:</strong> <span class="ic">${INPUT_BUCKET}</span> and <span class="ic">${OUTPUT_BUCKET}</span> appear inside the JSON string. Use double quotes on the outer string and escape all inner JSON quotes with backslashes. If you use single quotes, the Resource ARNs will contain the literal text <span class="ic">$INPUT_BUCKET</span> and the policy will silently apply to a bucket that does not exist.</div>
+        </div>
+        <div class="explain">
+          <h5>Breaking down the S3 permissions needed</h5>
+          <p><strong>s3:GetObject on input bucket:</strong> Lambda 2 (ImageProcessor) downloads the original image from the input bucket to /tmp for processing.</p>
+          <p><strong>s3:PutObject on output bucket:</strong> Lambda 2 uploads 3 processed images to the output bucket after resizing/compressing.</p>
+          <p><strong>s3:HeadObject:</strong> Lambda 3 (get-processed-images) may check if the processed files exist before generating download URLs.</p>
+          <p><strong>s3:GeneratePresignedUrl on Resource: *:</strong> Pre-signed URL generation is a client-side SDK operation — it uses your IAM credentials to sign a URL that can be used by anyone. It technically doesn't need a specific resource because no S3 API call is made — the SDK signs the URL locally using your credentials. However the effective S3 operation (PUT/GET) is still bound by the bucket policies above.</p>
+        </div>
+        <div class="callout tip">
+          <div class="callout-icon">✅</div>
+          <div class="callout-body"><strong>Save the role ARN — you need it in Phase 3:</strong>
+            <pre><code>ROLE_ARN=$(aws iam get-role --role-name Lambda-Image-Processing-Role \
+  --query 'Role.Arn' --output text)
+echo $ROLE_ARN
+# arn:aws:iam::264449293739:role/Lambda-Image-Processing-Role</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 6 — PHASE 3: LAMBDA FUNCTIONS ═══ -->
+<div class="section" id="phase3">
+  <div class="section-header"><div class="section-num">6</div><div class="section-title">Phase 3 — Deploy 3 Lambda Functions</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why after IAM?</strong> Lambda create-function requires the role ARN at creation time. Why before API Gateway (Phase 5)? API Gateway integrations need the Lambda function ARNs. Why before S3 event trigger (Phase 4)? The S3 trigger notification points to a specific Lambda ARN — the function must exist first.
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body"><strong>Critical difference from LinkForge:</strong> Lambda 2 (ImageProcessor) uses Pillow which is NOT available in the Lambda runtime. You MUST bundle Pillow into the ZIP. Lambda 1 and 3 have no external dependencies — only boto3, which IS pre-installed. Two different packaging approaches for this one project.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Package and deploy Lambda 1 — generate-upload-url (no dependencies)</div></div>
+      <div class="step-body">
+        <pre><code>cd lambda-functions/generate-upload-url
+zip ../../build/generate_upload_url.zip lambda_function.py
+cd ../..
+
+aws lambda create-function \
+  --function-name generate-upload-url \
+  --runtime python3.11 \
+  --role $ROLE_ARN \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://build/generate_upload_url.zip \
+  --timeout 10 \
+  --memory-size 128 \
+  --region $REGION \
+  --environment Variables='{
+    "INPUT_BUCKET": "$INPUT_BUCKET"
+  }'</code></pre>
+        <div class="explain">
+          <h5>What this function does and why it's simple to package</h5>
+          <p>This function receives <span class="ic">{"filename": "photo.jpg", "contentType": "image/jpeg"}</span>, calls <span class="ic">s3.generate_presigned_url("put_object", ...)</span>, and returns the signed URL. It only uses boto3 which is pre-installed in every Lambda Python runtime — no pip install needed, the .py file alone is the entire deployment package.</p>
+          <p><span class="ic">--timeout 10</span>: Pre-signed URL generation is instant (no network call — it's a local crypto signing operation). 10 seconds is generous but appropriate for a URL generation endpoint.</p>
+          <p><span class="ic">--memory-size 128</span>: Minimum memory. URL generation is trivial computation — no reason to pay for more.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Package and deploy Lambda 3 — get-processed-images (no dependencies)</div></div>
+      <div class="step-body">
+        <pre><code>mkdir -p build
+cd lambda-functions/get-processed-images
+zip ../../build/get_processed_images.zip lambda_function.py
+cd ../..
+
+aws lambda create-function \
+  --function-name get-processed-images \
+  --runtime python3.11 \
+  --role $ROLE_ARN \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://build/get_processed_images.zip \
+  --timeout 10 \
+  --memory-size 128 \
+  --region $REGION \
+  --environment Variables='{
+    "OUTPUT_BUCKET": "$OUTPUT_BUCKET"
+  }'</code></pre>
+        <div class="explain">
+          <h5>What this function does</h5>
+          <p>Receives a filename (e.g. photo.jpg), generates three pre-signed S3 GET URLs pointing to 1080p/photo.jpg, 720p/photo.jpg, 480p/photo.jpg in the output bucket, and returns them as a JSON object. Like Lambda 1, it only uses boto3 — simple packaging. 1-hour URL expiry (3600 seconds) gives the user time to click all three download links without them expiring.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Package Lambda 2 — ImageProcessor (Pillow must be bundled)</div></div>
+      <div class="step-body">
+        <pre><code># Create a clean packaging directory
+mkdir -p build/image-processor-pkg
+
+# Install Pillow into that directory (this is the critical step)
+pip3 install pillow --target build/image-processor-pkg --platform manylinux2014_x86_64 \
+  --implementation cp --python-version 3.11 --only-binary=:all:
+
+# Copy the Lambda code into the same directory
+cp lambda-functions/image-processor/lambda_function.py build/image-processor-pkg/
+
+# Zip everything together — Pillow + lambda_function.py at the root of the ZIP
+cd build/image-processor-pkg
+zip -r ../image_processor.zip .
+cd ../..</code></pre>
+
+        <table class="cmd-table">
+          <thead><tr><th>Part</th><th>What it does and why exactly this way</th></tr></thead>
+          <tbody>
+            <tr><td>pip3 install pillow --target</td><td>Installs Pillow into a specific directory instead of the system Python. --target means "put the package files here" — this is the standard way to create Lambda deployment packages with dependencies.</td></tr>
+            <tr><td>--platform manylinux2014_x86_64</td><td>CRITICAL: Pillow is a C extension library. Your Mac/Windows has a different binary format than the Lambda Linux runtime. This flag forces pip to download the Linux-compatible binary wheel instead of the binary for your local machine. Without this, Pillow will import successfully on your Mac but crash with ImportError on Lambda.</td></tr>
+            <tr><td>--implementation cp --python-version 3.11</td><td>Specifies the exact CPython 3.11 binary to download — must match the Lambda runtime (python3.11). This ensures the Pillow C extensions are compiled for the right Python ABI.</td></tr>
+            <tr><td>--only-binary=:all:</td><td>Forces pip to only download pre-built wheel files (no compilation from source). Without this, pip might try to compile Pillow from source code, which requires build tools not available in the sandboxed environment.</td></tr>
+            <tr><td>zip -r ../image_processor.zip .</td><td>Zips everything in the packaging directory — both lambda_function.py and the entire Pillow package directory tree — into a single ZIP. Lambda extracts this ZIP into the execution environment, making Pillow importable by your code.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body"><strong>Most common packaging mistake: missing the Linux platform flag</strong>
+            <pre><code># WRONG — installs Pillow for your local OS (Mac/Windows)
+pip3 install pillow --target build/image-processor-pkg
+
+# CORRECT — installs the Linux binary that Lambda can run
+pip3 install pillow --target build/image-processor-pkg \
+  --platform manylinux2014_x86_64 \
+  --implementation cp --python-version 3.11 --only-binary=:all:</code></pre>
+            Symptom: Lambda deploys fine, but when triggered it throws <span class="ic">ImportError: cannot import name '_imaging' from 'PIL'</span>. This means the Pillow binary is for the wrong OS. Re-package with the correct platform flag.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Deploy Lambda 2 — ImageProcessor</div></div>
+      <div class="step-body">
+        <pre><code>aws lambda create-function \
+  --function-name ImageProcessorLambda-Shivam \
+  --runtime python3.11 \
+  --role $ROLE_ARN \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://build/image_processor.zip \
+  --timeout 59 \
+  --memory-size 1024 \
+  --region $REGION \
+  --environment Variables='{
+    "OUTPUT_BUCKET": "$OUTPUT_BUCKET",
+    "COMPRESSION_QUALITY": "85"
+  }'</code></pre>
+
+        <div class="explain">
+          <h5>Why timeout 59 and memory 1024 — very different from Lambdas 1 and 3</h5>
+          <p><strong>Timeout 59 seconds:</strong> Lambda has a hard maximum of 15 minutes, but a processing function needs careful tuning. A 14MB image takes ~2.5 seconds to download, process at 3 resolutions, and upload 3 files. A 50MB image near the limit takes ~6 seconds. Setting 59 seconds gives ample buffer while keeping the function well within Lambda's free tier duration billing. Setting it to the Lambda maximum (900s) would be wasteful — if there's a bug causing an infinite loop, you'd pay for 15 minutes instead of failing fast at 59 seconds.</p>
+          <p><strong>Memory 1024 MB:</strong> Pillow loads the entire image into memory for processing. A 14MB JPEG decompressed into raw pixels becomes approximately 100–200 MB in memory. Processing 3 resolutions simultaneously means peak memory usage can hit 300–400 MB. 1024 MB gives a safe ceiling. Important: Lambda's CPU allocation is directly proportional to memory — more memory = more CPU = faster processing. The image processor benefits from more CPU to run Pillow's compression algorithms faster.</p>
+        </div>
+
+        <div class="key-diff">
+          <h5>Key insight — this Lambda is NEVER called by API Gateway</h5>
+          <p>Notice there is no API Gateway route pointing to ImageProcessorLambda-Shivam. It is triggered exclusively by the S3 event configured in Phase 4. When a user uploads an image (via the pre-signed URL from Lambda 1), the image lands in the input bucket, and S3 automatically fires an event that invokes this Lambda. The user never knows this Lambda exists — they just wait ~5 seconds and then request download URLs from Lambda 3.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">Update Lambda code after initial deployment (re-deploy pattern)</div></div>
+      <div class="step-body">
+        <pre><code># For Lambdas 1 and 3 (no dependencies — just re-zip the .py file):
+cd lambda-functions/generate-upload-url
+zip ../../build/generate_upload_url.zip lambda_function.py
+cd ../..
+aws lambda update-function-code \
+  --function-name generate-upload-url \
+  --zip-file fileb://build/generate_upload_url.zip \
+  --region $REGION
+
+# For Lambda 2 (dependencies — must re-install Pillow and re-zip):
+pip3 install pillow --target build/image-processor-pkg \
+  --platform manylinux2014_x86_64 \
+  --implementation cp --python-version 3.11 --only-binary=:all:
+cp lambda-functions/image-processor/lambda_function.py build/image-processor-pkg/
+cd build/image-processor-pkg && zip -r ../image_processor.zip . && cd ../..
+aws lambda update-function-code \
+  --function-name ImageProcessorLambda-Shivam \
+  --zip-file fileb://build/image_processor.zip \
+  --region $REGION</code></pre>
+        <div class="explain">
+          <h5>Why update-function-code instead of create-function on re-deploy?</h5>
+          <p><span class="ic">create-function</span> fails if the function already exists. <span class="ic">update-function-code</span> replaces only the code ZIP without touching the function's configuration (timeout, memory, env vars, IAM role). Use this for all subsequent code changes after the initial deployment.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 7 — PHASE 4: S3 EVENT TRIGGER ═══ -->
+<div class="section" id="phase4">
+  <div class="section-header"><div class="section-num">7</div><div class="section-title">Phase 4 — S3 Event Trigger (Wires S3 to ImageProcessor)</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why Phase 4 after Lambda?</strong> The S3 event notification points to a specific Lambda ARN. The Lambda must exist before S3 can be configured to call it. Similarly, you must grant Lambda invoke permission before adding the notification — otherwise S3 cannot deliver the event.
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body"><strong>This is the "magic" that makes the pipeline automatic:</strong> Once this trigger is configured, every single image uploaded to the input bucket (regardless of how it got there — pre-signed URL, CLI, console) automatically triggers the ImageProcessor Lambda. No polling, no manual invocation. S3 pushes an event synchronously to Lambda.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Grant S3 permission to invoke the ImageProcessor Lambda</div></div>
+      <div class="step-body">
+        <pre><code>aws lambda add-permission \
+  --function-name ImageProcessorLambda-Shivam \
+  --statement-id s3-trigger-permission \
+  --action lambda:InvokeFunction \
+  --principal s3.amazonaws.com \
+  --source-arn arn:aws:s3:::$INPUT_BUCKET \
+  --source-account $ACCOUNT_ID \
+  --region $REGION</code></pre>
+
+        <table class="cmd-table">
+          <thead><tr><th>Flag</th><th>What it does and why</th></tr></thead>
+          <tbody>
+            <tr><td>--principal s3.amazonaws.com</td><td>Grants S3 (not API Gateway, not a user) permission to invoke this Lambda. S3 uses its own service principal — different from the apigateway.amazonaws.com used in LinkForge.</td></tr>
+            <tr><td>--source-arn arn:aws:s3:::$INPUT_BUCKET</td><td>Restricts to ONLY the input bucket. Without this, any S3 bucket in your account (or even other accounts) could invoke the ImageProcessor — a security risk. Scoping to one bucket ARN ensures only uploads to this specific bucket trigger processing.</td></tr>
+            <tr><td>--source-account $ACCOUNT_ID</td><td>Additional security restriction — only events from your own account. Prevents "confused deputy" attacks where a malicious bucket in another account could trigger your Lambda.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="explain">
+          <h5>Why must this permission be added BEFORE the S3 notification?</h5>
+          <p>When you configure the S3 bucket notification in Step 2, AWS validates that the target Lambda function actually allows S3 to invoke it. If the permission doesn't exist, the put-bucket-notification-configuration command itself fails with "Unable to validate the following destination configurations." Always add the Lambda permission first, then configure the S3 notification.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Configure the S3 bucket notification</div></div>
+      <div class="step-body">
+        <pre><code>PROCESSOR_ARN="arn:aws:lambda:$REGION:$ACCOUNT_ID:function:ImageProcessorLambda-Shivam"
+
+aws s3api put-bucket-notification-configuration \
+  --bucket $INPUT_BUCKET \
+  --region $REGION \
+  --notification-configuration "{
+    \"LambdaFunctionConfigurations\": [{
+      \"LambdaFunctionArn\": \"$PROCESSOR_ARN\",
+      \"Events\": [\"s3:ObjectCreated:*\"]
+    }]
+  }"</code></pre>
+
+        <div class="explain">
+          <h5>What does s3:ObjectCreated:* mean?</h5>
+          <p><span class="ic">s3:ObjectCreated:*</span> is a wildcard that matches any object creation event — this includes <span class="ic">s3:ObjectCreated:Put</span> (direct PUT), <span class="ic">s3:ObjectCreated:Post</span> (multipart upload), <span class="ic">s3:ObjectCreated:Copy</span> (object copy), and <span class="ic">s3:ObjectCreated:CompleteMultipartUpload</span>. Using * ensures the ImageProcessor fires regardless of how the image arrived in the bucket. If you used Put only, a large image uploaded via multipart would not trigger processing.</p>
+          <p>The event payload S3 sends to Lambda includes the bucket name, object key, object size, and ETag. The ImageProcessor Lambda reads these from <span class="ic">event['Records'][0]['s3']</span>.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 8 — PHASE 5: API GATEWAY ═══ -->
+<div class="section" id="phase5">
+  <div class="section-header"><div class="section-num">8</div><div class="section-title">Phase 5 — API Gateway REST API (v1)</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why Phase 5 after Lambda?</strong> API Gateway integrations reference Lambda function ARNs. The functions must exist to be referenced. Why last before frontend? The frontend JavaScript needs the API Gateway URL — which is only known after the API is deployed to a stage.
+    </div>
+
+    <div class="key-diff">
+      <h5>REST API v1 vs HTTP API v2 — This project uses v1</h5>
+      <p>LinkForge used HTTP API (v2) with the <span class="ic">aws apigatewayv2</span> CLI command. This project uses REST API (v1) with the <span class="ic">aws apigateway</span> CLI command. The APIs are different products with different CLI interfaces. Key differences: v1 (REST) requires explicit deployment to a stage after each change; v2 (HTTP) has AutoDeploy. v1 requires manual CORS configuration with OPTIONS methods; v2 has built-in CORS settings. v1 is older and more feature-rich; v2 is simpler and cheaper.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Create the REST API</div></div>
+      <div class="step-body">
+        <pre><code>API_ID=$(aws apigateway create-rest-api \
+  --name "ImagePipelineAPI" \
+  --description "API for Image Processing Pipeline" \
+  --endpoint-configuration types=REGIONAL \
+  --region $REGION \
+  --query 'id' --output text)
+
+echo "API ID: $API_ID"
+
+# Get the root resource ID (needed to create child resources)
+ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --region $REGION \
+  --query 'items[?path==`/`].id' --output text)
+
+echo "Root Resource ID: $ROOT_ID"</code></pre>
+
+        <div class="explain">
+          <h5>What is the root resource and why do you need its ID?</h5>
+          <p>Every REST API in API Gateway has a root resource "/" that represents the base URL. When you create child resources (like /generate-upload-url or /processed-images), you must specify the parent resource they live under. The root resource ID is the parent for both your endpoints. Every API Gateway resource has a unique ID — you need it for subsequent CLI commands to create methods and integrations.</p>
+          <p><span class="ic">--endpoint-configuration types=REGIONAL</span>: Creates a regional API (served from the ap-south-1 region only, not from CloudFront edge locations). Regional endpoints are faster for users in the same region and have lower costs than EDGE endpoints.</p>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: zsh: number expected — when running the API creation command</strong>
+            <pre><code>API ID: 6vk04wd8h5
+zsh: number expected
+Root Resource ID: vmtbkp014i</code></pre>
+            <strong>Why it happened:</strong> The <span class="ic">--query 'items[?path==`/`].id'</span> part of the ROOT_ID command uses backtick characters inside single-quoted JMESPath. zsh misreads the backtick characters in the query string as a shell arithmetic expression and throws "number expected." This is a zsh-specific parsing quirk — not a bash issue.
+            <br><br>
+            <strong>This is harmless — both values came back correctly.</strong> The API was created and both variables are set. You can verify:
+            <pre><code>echo "API ID: $API_ID"
+echo "Root ID: $ROOT_ID"</code></pre>
+            If either variable is empty, re-run that specific sub-command. The zsh error does not abort the command — it just warns and continues.
+            <br><br>
+            <strong>Prevention (if you want to avoid the warning):</strong> Use escaped backticks or double quotes around the query:
+            <pre><code>ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --region $REGION \
+  --query "items[?path=='/'].id" --output text)</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Create /generate-upload-url endpoint with CORS</div></div>
+      <div class="step-body">
+        <pre><code># Create the resource (URL path)
+UPLOAD_URL_RESOURCE=$(aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part "generate-upload-url" \
+  --region $REGION \
+  --query 'id' --output text)
+
+# Add POST method (no auth required — public endpoint)
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method POST \
+  --authorization-type NONE \
+  --region $REGION
+
+# Integrate POST with Lambda 1
+LAMBDA1_ARN="arn:aws:lambda:$REGION:$ACCOUNT_ID:function:generate-upload-url"
+
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method POST \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:$REGION:lambda:path/2015-03-31/functions/$LAMBDA1_ARN/invocations" \
+  --region $REGION
+
+# Grant API Gateway permission to invoke Lambda 1
+aws lambda add-permission \
+  --function-name generate-upload-url \
+  --statement-id apigateway-invoke-upload \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:$REGION:$ACCOUNT_ID:$API_ID/*/*" \
+  --region $REGION
+
+# Add CORS — OPTIONS method with MOCK integration
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region $REGION
+
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json": "{\"statusCode\": 200}"}' \
+  --region $REGION
+
+aws apigateway put-method-response \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{
+    "method.response.header.Access-Control-Allow-Headers": false,
+    "method.response.header.Access-Control-Allow-Methods": false,
+    "method.response.header.Access-Control-Allow-Origin": false
+  }' \
+  --region $REGION
+
+aws apigateway put-integration-response \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{
+    "method.response.header.Access-Control-Allow-Headers": "'"'"'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"'"'",
+    "method.response.header.Access-Control-Allow-Methods": "'"'"'POST,OPTIONS'"'"'",
+    "method.response.header.Access-Control-Allow-Origin": "'"'"'*'"'"'"
+  }' \
+  --region $REGION</code></pre>
+
+        <div class="explain">
+          <h5>Why does REST API need manual CORS setup with OPTIONS (unlike HTTP API v2)?</h5>
+          <p>HTTP API (v2) has a <span class="ic">CorsConfiguration</span> block that handles everything automatically. REST API (v1) has no such block — you must manually create an OPTIONS method on every resource and configure it with a MOCK integration (a fake endpoint that returns CORS headers without calling Lambda). The MOCK integration returns a 200 with the three CORS headers browsers need: Allow-Origin, Allow-Methods, Allow-Headers. This is the "preflight response" that browsers check before sending the actual POST.</p>
+          <p>The Lambda functions also return <span class="ic">Access-Control-Allow-Origin: *</span> in their response headers — this handles the "actual response" CORS check. You need CORS on both the OPTIONS preflight AND the actual response.</p>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: BadRequestException — AWS ARN for integration must contain path or action</strong>
+            <pre><code>An error occurred (BadRequestException) when calling the PutIntegration operation:
+AWS ARN for integration must contain path or action</code></pre>
+            <strong>Why it happened:</strong> The <span class="ic">put-integration</span> command for the POST method failed because the <span class="ic">--uri</span> ARN was malformed — the <span class="ic">$LAMBDA1_ARN</span> variable was not expanded before being embedded in the URI string. The URI must be in the format:
+            <br><span class="ic">arn:aws:apigateway:REGION:lambda:path/2015-03-31/functions/FULL_LAMBDA_ARN/invocations</span>
+            <br><br>
+            <strong>Everything else in the step succeeded</strong> — the POST method was created, Lambda permission was granted, and the OPTIONS MOCK for CORS all went through. Only the <span class="ic">put-integration</span> for POST failed.
+            <br><br>
+            <strong>Fix — build the Lambda ARN explicitly and verify it before using:</strong>
+            <pre><code># Build and verify the ARN first
+LAMBDA1_ARN="arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:generate-upload-url"
+echo $LAMBDA1_ARN   # ← always verify this looks correct before the next command
+
+# Then run put-integration separately using ${} braces for safe expansion
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $UPLOAD_URL_RESOURCE \
+  --http-method POST \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:${REGION}:lambda:path/2015-03-31/functions/${LAMBDA1_ARN}/invocations" \
+  --region $REGION</code></pre>
+            <strong>Success response:</strong> <span class="ic">{"type": "AWS_PROXY", "httpMethod": "POST", "uri": "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/arn:aws:lambda:..."}</span> — confirms the integration is wired correctly.
+            <br><br>
+            <strong>Same issue appears in Step 3</strong> for the GET method on <span class="ic">/processed-images/{filename}</span>. Apply the same fix with <span class="ic">LAMBDA3_ARN</span>.
+          </div>
+        </div>
+
+        <div class="explain">
+          <h5>What is AWS_PROXY integration type?</h5>
+          <p>AWS_PROXY means API Gateway passes the entire HTTP request to Lambda as a JSON event — headers, body, path parameters, query parameters all included. Lambda returns a JSON response object with statusCode, headers, and body, and API Gateway transforms it back into an HTTP response. This is the standard modern pattern. The alternative (AWS integration type without PROXY) requires you to manually define request/response mapping templates — much more complex and rarely needed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Create /processed-images/{filename} endpoint with CORS</div></div>
+      <div class="step-body">
+        <pre><code># Create /processed-images parent resource
+PROC_IMAGES_RESOURCE=$(aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part "processed-images" \
+  --region $REGION \
+  --query 'id' --output text)
+
+# Create {filename} path parameter child resource
+FILENAME_RESOURCE=$(aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $PROC_IMAGES_RESOURCE \
+  --path-part "{filename}" \
+  --region $REGION \
+  --query 'id' --output text)
+
+# Add GET method with filename path parameter required
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method GET \
+  --authorization-type NONE \
+  --request-parameters "method.request.path.filename=true" \
+  --region $REGION
+
+# Integrate GET with Lambda 3
+LAMBDA3_ARN="arn:aws:lambda:$REGION:$ACCOUNT_ID:function:get-processed-images"
+
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method GET \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:$REGION:lambda:path/2015-03-31/functions/$LAMBDA3_ARN/invocations" \
+  --region $REGION
+
+# Grant API Gateway permission to invoke Lambda 3
+aws lambda add-permission \
+  --function-name get-processed-images \
+  --statement-id apigateway-invoke-processed \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:$REGION:$ACCOUNT_ID:$API_ID/*/*" \
+  --region $REGION
+
+# Add CORS OPTIONS to the {filename} resource (same pattern as above)
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method OPTIONS \
+  --authorization-type NONE \
+  --region $REGION
+
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method OPTIONS \
+  --type MOCK \
+  --request-templates '{"application/json": "{\"statusCode\": 200}"}' \
+  --region $REGION
+
+aws apigateway put-method-response \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{
+    "method.response.header.Access-Control-Allow-Headers": false,
+    "method.response.header.Access-Control-Allow-Methods": false,
+    "method.response.header.Access-Control-Allow-Origin": false
+  }' \
+  --region $REGION
+
+aws apigateway put-integration-response \
+  --rest-api-id $API_ID \
+  --resource-id $FILENAME_RESOURCE \
+  --http-method OPTIONS \
+  --status-code 200 \
+  --response-parameters '{
+    "method.response.header.Access-Control-Allow-Headers": "'"'"'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"'"'",
+    "method.response.header.Access-Control-Allow-Methods": "'"'"'GET,OPTIONS'"'"'",
+    "method.response.header.Access-Control-Allow-Origin": "'"'"'*'"'"'"
+  }' \
+  --region $REGION</code></pre>
+
+        <div class="explain">
+          <h5>Why is the path-part "{filename}" in curly braces?</h5>
+          <p>Curly braces denote a path parameter in API Gateway. When a request comes in for <span class="ic">/processed-images/photo.jpg</span>, API Gateway captures "photo.jpg" as the value of the <span class="ic">filename</span> path parameter and passes it to Lambda in <span class="ic">event["pathParameters"]["filename"]</span>. Without curly braces, API Gateway treats it as a literal string — only requests to exactly <span class="ic">/processed-images/{filename}</span> would match, which is not useful.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Deploy the API to a stage — REST API requires explicit deployment</div></div>
+      <div class="step-body">
+        <pre><code>aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name prod \
+  --stage-description "Production Stage" \
+  --description "Initial deployment" \
+  --region $REGION
+
+# Your API base URL is now:
+echo "API URL: https://$API_ID.execute-api.$REGION.amazonaws.com/prod"</code></pre>
+
+        <div class="explain">
+          <h5>Why does REST API (v1) need an explicit deployment step?</h5>
+          <p>REST API in API Gateway uses a "deployment + stage" model. A deployment is a snapshot of your API configuration at a point in time. A stage (prod, dev, staging) points to a specific deployment. This design means you can have different stages point to different versions of your API — useful for blue/green deployments. The downside: every time you change a method, integration, or CORS setting, you must create a new deployment and it takes effect in the stage only after the deployment. This is different from HTTP API v2 which has AutoDeploy — changes take effect immediately.</p>
+          <p><strong>If you make any change to the API after this step, you MUST run create-deployment again.</strong> Forgetting this is the most common source of confusion in API Gateway v1 — "I changed the Lambda but the API still behaves the same."</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 9 — PHASE 6: FRONTEND ═══ -->
+<div class="section" id="phase6">
+  <div class="section-header"><div class="section-num">9</div><div class="section-title">Phase 6 — Deploy Frontend to S3</div></div>
+  <div class="section-body">
+
+    <div class="sequence-note">
+      <strong>Why last?</strong> The frontend JavaScript (app.js) contains the API Gateway URL. That URL is only known after Phase 5 deploys the API. You must update the URL in the code before uploading the files.
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Update the API URL in app.js</div></div>
+      <div class="step-body">
+        <pre><code># Get your API URL
+echo "https://$API_ID.execute-api.$REGION.amazonaws.com/prod"</code></pre>
+        <p style="margin:.8rem 0;font-size:.92rem;">Open <span class="ic">frontend/app.js</span> and update line 2:</p>
+        <pre><code>// Change this line:
+const API_BASE_URL = 'https://38hmfok3uk.execute-api.ap-south-1.amazonaws.com/prod';
+// To your actual API ID from Phase 5:
+const API_BASE_URL = 'https://&lt;YOUR_API_ID&gt;.execute-api.ap-south-1.amazonaws.com/prod';</code></pre>
+        <div class="explain">
+          <h5>Why is the URL hardcoded in JavaScript (not injected at runtime)?</h5>
+          <p>S3 static website hosting serves flat files — there is no server that can inject values at request time. The API URL must be baked into the JavaScript file before it's uploaded. This is the same limitation as LinkForge. In production systems, this would be handled by a build step (e.g. webpack with environment variables), but for this project, manual editing is the approach.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Sync frontend files to S3</div></div>
+      <div class="step-body">
+        <pre><code># Make sure you are inside the project root (serverless-image-optimizer/)
+# before running this — the frontend/ folder must exist relative to your cwd
+aws s3 sync frontend/ s3://$FRONTEND_BUCKET/ \
+  --region $REGION \
+  --delete \
+  --exclude "README.md"
+
+# Set correct content types
+aws s3 cp s3://$FRONTEND_BUCKET/ s3://$FRONTEND_BUCKET/ \
+  --recursive --exclude "*" --include "*.html" \
+  --content-type "text/html" --metadata-directive REPLACE --region $REGION
+
+aws s3 cp s3://$FRONTEND_BUCKET/ s3://$FRONTEND_BUCKET/ \
+  --recursive --exclude "*" --include "*.js" \
+  --content-type "application/javascript" --metadata-directive REPLACE --region $REGION
+
+aws s3 cp s3://$FRONTEND_BUCKET/ s3://$FRONTEND_BUCKET/ \
+  --recursive --exclude "*" --include "*.css" \
+  --content-type "text/css" --metadata-directive REPLACE --region $REGION</code></pre>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue 1 Hit: "The user-provided path frontend/ does not exist"</strong>
+            <pre><code>fatal error: The user-provided path frontend/ does not exist.</code></pre>
+            <strong>Why it happened:</strong> The terminal was in a parent directory (<span class="ic">Image Optimization Pipeline ReDeploy/</span>) that contained the project folder as a subdirectory, rather than inside the project root itself. The <span class="ic">frontend/</span> folder only exists relative to the project root.
+            <br><br>
+            <strong>Fix — always verify your working directory before running S3 sync:</strong>
+            <pre><code>pwd           # confirm you are in serverless-image-optimizer/
+ls            # confirm frontend/ folder is visible in the listing
+aws s3 sync frontend/ s3://$FRONTEND_BUCKET/ --region $REGION --delete --exclude "README.md"</code></pre>
+            If you see the project folder listed (not its contents), you need to <span class="ic">cd serverless-image-optimizer</span> first.
+            <br><br>
+            <strong>Issue 2 Hit: Invalid bucket name "" — $FRONTEND_BUCKET is empty</strong>
+            <pre><code>fatal error: Parameter validation failed:
+Invalid bucket name "": Bucket name must match the regex...</code></pre>
+            <strong>Why it happened:</strong> Shell variables are not persistent across terminal sessions or directory changes. When you opened a new terminal tab or the variable was never exported in that session, <span class="ic">$FRONTEND_BUCKET</span> resolved to an empty string. The <span class="ic">s3 sync</span> command then tried to sync to a bucket named <span class="ic">""</span>.
+            <br><br>
+            <strong>Fix — always re-export variables at the start of every terminal session before running any command:</strong>
+            <pre><code>export SUFFIX="anshuman"
+export REGION="ap-south-1"
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export INPUT_BUCKET="image-pipeline-input-$SUFFIX"
+export OUTPUT_BUCKET="image-pipeline-output-$SUFFIX"
+export FRONTEND_BUCKET="image-pipeline-frontend-$SUFFIX"
+# Verify before continuing:
+echo "$INPUT_BUCKET | $OUTPUT_BUCKET | $FRONTEND_BUCKET"</code></pre>
+            <strong>Pro tip for interviews:</strong> Keep this export block at the top of a scratch file. Copy-paste it at the start of every terminal session. Never assume variables from a previous session are still set.
+          </div>
+        </div>
+
+        <div class="explain">
+          <h5>Why separately fix content types after sync?</h5>
+          <p><span class="ic">aws s3 sync</span> sometimes guesses MIME types incorrectly or uses <span class="ic">application/octet-stream</span> as a fallback. Browsers use the <span class="ic">Content-Type</span> HTTP header to decide how to handle a file. If .js files have the wrong content type, modern browsers may refuse to execute them (especially with strict CSP settings). The <span class="ic">cp</span> commands with <span class="ic">--metadata-directive REPLACE</span> force-overwrite the content type on already-uploaded files without re-uploading the data.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Get your live website URL</div></div>
+      <div class="step-body">
+        <pre><code>echo "Frontend: http://$FRONTEND_BUCKET.s3-website.$REGION.amazonaws.com"
+echo "API: https://$API_ID.execute-api.$REGION.amazonaws.com/prod"</code></pre>
+        <div class="explain">
+          <h5>Why HTTP and not HTTPS for the frontend?</h5>
+          <p>S3 static website hosting only supports HTTP. Adding HTTPS requires putting CloudFront (AWS CDN) in front of S3 with an ACM certificate — that's on the future enhancements list. For an interview demo, HTTP is fine. Note: some browsers may warn about a "mixed content" issue if the frontend (HTTP) calls an API Gateway (HTTPS) — but modern browsers generally allow this direction (HTTP page → HTTPS API). The reverse (HTTPS page → HTTP API) would be blocked.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 10 — VERIFICATION ═══ -->
+<div class="section" id="verify">
+  <div class="section-header"><div class="section-num">10</div><div class="section-title">Verification &amp; Testing — Layer by Layer</div></div>
+  <div class="section-body">
+
+    <div class="explain">
+      <h5>Test order matters — bottom up</h5>
+      <p>Test each layer independently before testing the layer above it. If the upload API fails, don't test the UI. If the ImageProcessor doesn't trigger, don't test the download API. Isolating failures layer by layer tells you exactly where to fix, not just that something is broken.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">1</div><div class="step-title">Test Lambda 1 — generate-upload-url</div></div>
+      <div class="step-body">
+        <pre><code>API_BASE="https://$API_ID.execute-api.$REGION.amazonaws.com/prod"
+
+curl -X POST $API_BASE/generate-upload-url \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "test.jpg", "contentType": "image/jpeg"}' \
+  | python3 -m json.tool</code></pre>
+        <div class="explain">
+          <h5>Expected response and what it tells you</h5>
+          <p><strong>Expected:</strong> <span class="ic">{"uploadUrl": "https://image-pipeline-input-$SUFFIX.s3.amazonaws.com/test.jpg?X-Amz-...", "filename": "test.jpg"}</span></p>
+          <p>This confirms: API Gateway route exists, Lambda 1 was invoked, IAM role allows pre-signed URL generation, and the URL is for the correct input bucket. If you get <span class="ic">{"message": "Internal Server Error"}</span> check CloudWatch Logs for Lambda 1. If you get <span class="ic">{"message": "Missing Authentication Token"}</span> the API stage was not deployed — run create-deployment again.</p>
+          <p><strong>Critical check: verify the bucket name in the uploadUrl matches YOUR bucket</strong> — the URL should say <span class="ic">image-pipeline-input-anshuman</span>, not <span class="ic">image-pipeline-input-sid</span>.</p>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: Upload fails with 403 — pre-signed URL pointing to wrong bucket</strong>
+            <pre><code># curl response showed:
+"uploadUrl": "https://image-pipeline-input-sid.s3.amazonaws.com/test.jpg?..."
+#                                          ^^^
+#                         Should be: image-pipeline-input-anshuman
+
+# Browser error:
+Failed to load resource: the server responded with a status of 403 (Forbidden)
+Error: Failed to upload image to S3</code></pre>
+            <strong>Root cause — the bucket name was hardcoded in the Lambda source code, not read from the environment variable:</strong>
+            <pre><code># WRONG — what the original lambda_function.py had:
+s3 = boto3.client("s3")
+def lambda_handler(event, context):
+    url = s3.generate_presigned_url("put_object",
+        Params={"Bucket": "image-pipeline-input-sid", ...})  # ← HARDCODED
+
+# CORRECT — reads from env var (fix applied):
+import os
+BUCKET = os.environ.get("INPUT_BUCKET", "image-pipeline-input-sid")
+def lambda_handler(event, context):
+    url = s3.generate_presigned_url("put_object",
+        Params={"Bucket": BUCKET, ...})  # ← reads env var</code></pre>
+            <strong>Why setting the env var with update-function-configuration was not enough:</strong> Setting an environment variable only helps if the code actually reads it with <span class="ic">os.environ.get()</span>. The original generate-upload-url and get-processed-images code had the bucket names as string literals — <span class="ic">os.environ</span> was never called. The env var was set but completely ignored by the code.
+            <br><br>
+            <strong>The two-step fix:</strong>
+            <br>1. Update the source code to read from env vars (already done in the repo by Kiro's edit during this session)
+            <br>2. Re-zip and re-deploy the Lambda functions:
+            <pre><code>cd lambda-functions/generate-upload-url
+zip ../../build/generate_upload_url.zip lambda_function.py && cd ../..
+aws lambda update-function-code \
+  --function-name generate-upload-url \
+  --zip-file fileb://build/generate_upload_url.zip \
+  --region ap-south-1
+
+cd lambda-functions/get-processed-images
+zip ../../build/get_processed_images.zip lambda_function.py && cd ../..
+aws lambda update-function-code \
+  --function-name get-processed-images \
+  --zip-file fileb://build/get_processed_images.zip \
+  --region ap-south-1</code></pre>
+            <strong>Verify the fix worked:</strong> Run the curl test again — the uploadUrl should now say <span class="ic">image-pipeline-input-anshuman.s3.amazonaws.com</span>.
+            <br><br>
+            <strong>Lesson: setting env vars on a Lambda that doesn't read them does nothing.</strong> Always check whether the function code actually calls <span class="ic">os.environ.get("VAR_NAME")</span>. If it has hardcoded values, the code must be updated and redeployed.
+          </div>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">🔴</div>
+          <div class="callout-body">
+            <strong>Issue Hit: Error parsing parameter '--environment' — wrong quoting for update-function-configuration</strong>
+            <pre><code># These both failed:
+--environment Variables={"INPUT_BUCKET":"image-pipeline-input-anshuman"}
+--environment 'Variables={"INPUT_BUCKET":"image-pipeline-input-anshuman"}'
+
+# Error:
+Error parsing parameter '--environment': Expected: '=', received: '"'</code></pre>
+            <strong>Why:</strong> The <span class="ic">--environment</span> flag on <span class="ic">update-function-configuration</span> expects the entire value as a JSON object wrapped in <span class="ic">{"Variables":{...}}</span> format — not the shorthand <span class="ic">Variables={...}</span> format. The CLI's shorthand parser gets confused by the <span class="ic">{</span> after the <span class="ic">=</span>.
+            <br><br>
+            <strong>Correct format — wrap in {"Variables":{...}} with single quotes:</strong>
+            <pre><code>aws lambda update-function-configuration \
+  --function-name generate-upload-url \
+  --region ap-south-1 \
+  --environment '{"Variables":{"INPUT_BUCKET":"image-pipeline-input-anshuman"}}'</code></pre>
+            Note: single quotes work here because the JSON contains no shell variables — the bucket name is a literal string, not a <span class="ic">$VARIABLE</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">2</div><div class="step-title">Test the actual upload — PUT a file directly to S3 using the pre-signed URL</div></div>
+      <div class="step-body">
+        <pre><code># Step 2a: Get a pre-signed URL (save the uploadUrl value)
+UPLOAD_URL=$(curl -s -X POST $API_BASE/generate-upload-url \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "test-image.jpg", "contentType": "image/jpeg"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['uploadUrl'])")
+
+# Step 2b: Upload a real image file directly to S3 using that URL
+curl -X PUT "$UPLOAD_URL" \
+  -H "Content-Type: image/jpeg" \
+  --data-binary @/path/to/any/test-image.jpg</code></pre>
+        <div class="explain">
+          <h5>Why test the upload separately from the UI?</h5>
+          <p>This verifies two things: (1) the pre-signed URL is valid and S3 accepts it, and (2) CORS is configured correctly on the input bucket. If curl succeeds but the browser fails, it's a CORS issue on the bucket. If curl also fails with 403, the pre-signed URL is malformed or the IAM role lacks s3:PutObject permission.</p>
+          <p>After a successful upload, check the input bucket: <span class="ic">aws s3 ls s3://$INPUT_BUCKET/ --region $REGION</span> — you should see test-image.jpg listed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">3</div><div class="step-title">Verify the S3 event triggered ImageProcessor automatically</div></div>
+      <div class="step-body">
+        <pre><code># Wait 10-15 seconds after upload, then check if processed files appeared
+aws s3 ls s3://$OUTPUT_BUCKET/1080p/ --region $REGION
+aws s3 ls s3://$OUTPUT_BUCKET/720p/ --region $REGION
+aws s3 ls s3://$OUTPUT_BUCKET/480p/ --region $REGION
+
+# Check CloudWatch logs for the ImageProcessor
+aws logs tail /aws/lambda/ImageProcessorLambda-Shivam \
+  --region $REGION \
+  --since 5m</code></pre>
+        <div class="explain">
+          <h5>What you're confirming here</h5>
+          <p>If processed files appear in all three folders: the S3 event trigger works, the ImageProcessor Lambda was invoked automatically, IAM permissions allow reading from input and writing to output, and Pillow processed the image correctly. If files DON'T appear: check CloudWatch logs for errors. Common causes: Pillow not bundled correctly in the ZIP (ImportError), IAM role lacks s3:GetObject on input or s3:PutObject on output, or the PNG transparency bug (RGBA mode).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">4</div><div class="step-title">Test Lambda 3 — get-processed-images</div></div>
+      <div class="step-body">
+        <pre><code>curl $API_BASE/processed-images/test-image.jpg | python3 -m json.tool</code></pre>
+        <div class="explain">
+          <h5>Expected response</h5>
+          <p><strong>Expected:</strong> <span class="ic">{"1080p": "https://image-pipeline-output-$SUFFIX.s3.amazonaws.com/1080p/test-image.jpg?X-Amz-...", "720p": "...", "480p": "..."}</span>. Click each URL in a browser to confirm the processed images download correctly. If you get 404 from Lambda — the processed files don't exist yet (ImageProcessor hasn't finished or failed). If you get 500 — check CloudWatch logs for Lambda 3.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header"><div class="step-num">5</div><div class="step-title">Test the frontend end-to-end</div></div>
+      <div class="step-body">
+        <pre><code># Open in browser:
+echo "http://$FRONTEND_BUCKET.s3-website.$REGION.amazonaws.com"</code></pre>
+        <div class="explain">
+          <h5>What to verify in the browser</h5>
+          <p>Upload a test image (JPEG first, then try PNG). Wait ~5 seconds. Click the three download buttons. Compare the original and processed file sizes — you should see 90%+ reduction. If the upload button does nothing: open browser DevTools → Network tab — look for failed requests. Common issues: API URL still has the old hardcoded value (ijlmwfo9gd), CORS not configured on the input bucket, or the S3 bucket policy not allowing public access.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SECTION 11 — REFERENCE ═══ -->
+<div class="section" id="schema">
+  <div class="section-header"><div class="section-num">11</div><div class="section-title">Data Flow &amp; Key Configs Reference</div></div>
+  <div class="section-body">
+    <table class="data-table">
+      <thead><tr><th>Config Key</th><th>Value</th><th>Used By</th></tr></thead>
+      <tbody>
+        <tr><td>Region</td><td>ap-south-1</td><td>Every AWS CLI command</td></tr>
+        <tr><td>Input bucket name</td><td>image-pipeline-input-$SUFFIX</td><td>Lambda 1 (generates pre-signed PUT URL), S3 event trigger</td></tr>
+        <tr><td>Output bucket name</td><td>image-pipeline-output-$SUFFIX</td><td>ImageProcessor (uploads to), Lambda 3 (generates pre-signed GET URLs from)</td></tr>
+        <tr><td>Frontend bucket</td><td>image-pipeline-frontend-$SUFFIX</td><td>S3 static website hosting</td></tr>
+        <tr><td>Lambda 1 name</td><td>generate-upload-url</td><td>API Gateway POST /generate-upload-url</td></tr>
+        <tr><td>Lambda 2 name</td><td>ImageProcessorLambda-Shivam</td><td>S3 event trigger only</td></tr>
+        <tr><td>Lambda 3 name</td><td>get-processed-images</td><td>API Gateway GET /processed-images/{filename}</td></tr>
+        <tr><td>IAM Role name</td><td>Lambda-Image-Processing-Role</td><td>All 3 Lambda functions</td></tr>
+        <tr><td>Output subfolders</td><td>1080p/ 720p/ 480p/</td><td>ImageProcessor writes here; Lambda 3 reads from here</td></tr>
+        <tr><td>Compression quality</td><td>85 (out of 100)</td><td>ImageProcessor env var COMPRESSION_QUALITY</td></tr>
+        <tr><td>Pre-signed URL expiry (upload)</td><td>900 seconds (15 min)</td><td>Lambda 1 — user must upload within 15 minutes</td></tr>
+        <tr><td>Pre-signed URL expiry (download)</td><td>3600 seconds (1 hour)</td><td>Lambda 3 — download links valid for 1 hour</td></tr>
+        <tr><td>API Gateway stage</td><td>prod</td><td>API URL path: /prod/generate-upload-url</td></tr>
+      </tbody>
+    </table>
+
+    <hr>
+    <h4 style="margin:.8rem 0;font-size:.95rem;">PNG Transparency Bug — What It Is and How It's Fixed</h4>
+    <div class="callout danger">
+      <div class="callout-icon">🔴</div>
+      <div class="callout-body">
+        <strong>Bug: "cannot write mode RGBA as JPEG" — affects all PNG files</strong>
+        <p style="margin:.4rem 0;font-size:.92rem;">PNG images can be saved in RGBA mode (Red, Green, Blue, Alpha). JPEG format does not support an alpha channel. When the ImageProcessor tried to save an RGBA image as JPEG, Pillow threw a fatal error and the entire processing failed — no output files were created.</p>
+        <strong>Fix already in lambda_function.py (lines 29-36):</strong>
+        <pre><code># After resize, before saving — convert mode if needed
+if resized_image.mode == 'RGBA':
+    rgb_image = Image.new('RGB', resized_image.size, (255, 255, 255))  # white bg
+    rgb_image.paste(resized_image, mask=resized_image.split()[3])      # alpha as mask
+    resized_image = rgb_image
+elif resized_image.mode != 'RGB':
+    resized_image = resized_image.convert('RGB')  # grayscale, CMYK, etc.</code></pre>
+        <p style="font-size:.92rem;">Transparent areas become white. All image formats (JPEG, PNG, BMP, TIFF, GIF, WebP) now process successfully. This fix is already in the repo — you do not need to add it. But you MUST know about it for an interview.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SECTION 12 — TROUBLESHOOT ═══ -->
+<div class="section" id="troubleshoot">
+  <div class="section-header"><div class="section-num">12</div><div class="section-title">Troubleshooting Quick Fixes</div></div>
+  <div class="section-body">
+    <table class="data-table">
+      <thead><tr><th>Problem</th><th>Root Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><strong>S3 bucket creation fails with BucketAlreadyExists</strong></td><td>Name taken globally</td><td>Add a unique suffix to the bucket name (date, username). Update all references to the new name in Lambda env vars and the notification configuration.</td></tr>
+        <tr><td><strong>create-bucket fails with LocationConstraint error</strong></td><td>Missing LocationConstraint for non-us-east-1</td><td>Add <span class="ic">--create-bucket-configuration LocationConstraint=ap-south-1</span>. This is required for every region except us-east-1.</td></tr>
+        <tr><td><strong>Upload button fails in browser with CORS error</strong></td><td>Input bucket missing CORS configuration</td><td>Re-run Phase 1 Step 4 (put-bucket-cors on input bucket). Check browser DevTools Network tab for the preflight OPTIONS response.</td></tr>
+        <tr><td><strong>Frontend returns 403 Forbidden</strong></td><td>Public access still blocked on frontend bucket</td><td>Re-run Phase 1 Steps 3a and 3b — both the block public access setting AND the bucket policy must be applied.</td></tr>
+        <tr><td><strong>Lambda 2 ImportError: cannot import _imaging from PIL</strong></td><td>Pillow bundled for wrong OS (Mac binary in Linux Lambda)</td><td>Delete the image-processor-pkg directory, re-run pip install WITH the <span class="ic">--platform manylinux2014_x86_64</span> flag, re-zip, re-deploy.</td></tr>
+        <tr><td><strong>S3 event does not trigger ImageProcessor</strong></td><td>Lambda permission not added before S3 notification</td><td>Re-run Phase 4 Step 1 (lambda add-permission), then re-run Phase 4 Step 2 (put-bucket-notification-configuration).</td></tr>
+        <tr><td><strong>API returns {"message": "Missing Authentication Token"}</strong></td><td>API Gateway not deployed to stage yet</td><td>Run <span class="ic">aws apigateway create-deployment --rest-api-id $API_ID --stage-name prod --region $REGION</span></td></tr>
+        <tr><td><strong>API changes not taking effect</strong></td><td>REST API v1 requires explicit re-deployment after any change</td><td>Every change to methods, integrations, or CORS requires a new deployment: <span class="ic">aws apigateway create-deployment --rest-api-id $API_ID --stage-name prod --region $REGION</span></td></tr>
+        <tr><td><strong>500 from API — Lambda not invoked</strong></td><td>Lambda invoke permission not granted to API Gateway</td><td>Re-run the <span class="ic">aws lambda add-permission</span> commands from Phase 5. Verify with <span class="ic">aws lambda get-policy --function-name generate-upload-url --region $REGION</span></td></tr>
+        <tr><td><strong>Processed files not appearing after upload</strong></td><td>ImageProcessor error — check CloudWatch</td><td><span class="ic">aws logs tail /aws/lambda/ImageProcessorLambda-Shivam --region $REGION --since 10m</span> — look for the specific error (usually Pillow import, RGBA mode, or IAM permission)</td></tr>
+        <tr><td><strong>cannot write mode RGBA as JPEG</strong></td><td>PNG transparency bug — code not updated</td><td>Verify lambda_function.py in image-processor includes the RGBA conversion block. Re-package and re-deploy Lambda 2.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip">
+      <div class="callout-icon">🔍</div>
+      <div class="callout-body"><strong>CloudWatch is your first stop for any Lambda failure:</strong>
+        <pre><code>aws logs tail /aws/lambda/generate-upload-url --region $REGION --follow
+aws logs tail /aws/lambda/ImageProcessorLambda-Shivam --region $REGION --follow
+aws logs tail /aws/lambda/get-processed-images --region $REGION --follow</code></pre>
+        The <span class="ic">--follow</span> flag streams live logs. Press Ctrl+C to stop.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SECTION 13 — CHECKLIST ═══ -->
+<div class="section" id="checklist">
+  <div class="section-header"><div class="section-num">13</div><div class="section-title">Interview Master Checklist</div></div>
+  <div class="section-body">
+    <ul class="checklist">
+      <li><div class="check-box"></div><span class="phase-label">SETUP</span> AWS CLI works — <span class="ic">aws sts get-caller-identity</span> returns account ID</li>
+      <li><div class="check-box"></div><span class="phase-label">SETUP</span> Shell variables set: <span class="ic">REGION=ap-south-1</span> and <span class="ic">ACCOUNT_ID</span></li>
+      <li><div class="check-box"></div><span class="phase-label">S3</span> 3 buckets created: input, output, frontend</li>
+      <li><div class="check-box"></div><span class="phase-label">S3</span> Frontend bucket has website hosting enabled and public read policy</li>
+      <li><div class="check-box"></div><span class="phase-label">S3</span> Input bucket has CORS for PUT operations (browser direct upload)</li>
+      <li><div class="check-box"></div><span class="phase-label">S3</span> Output bucket has CORS for GET operations (browser direct download)</li>
+      <li><div class="check-box"></div><span class="phase-label">IAM</span> Lambda-Image-Processing-Role created with Lambda trust policy</li>
+      <li><div class="check-box"></div><span class="phase-label">IAM</span> AWSLambdaBasicExecutionRole attached (CloudWatch Logs)</li>
+      <li><div class="check-box"></div><span class="phase-label">IAM</span> S3 read/write inline policy attached</li>
+      <li><div class="check-box"></div><span class="phase-label">IAM</span> <span class="ic">ROLE_ARN</span> variable saved</li>
+      <li><div class="check-box"></div><span class="phase-label">LAMBDA</span> Lambda 1 (generate-upload-url) deployed — simple ZIP, no dependencies</li>
+      <li><div class="check-box"></div><span class="phase-label">LAMBDA</span> Lambda 3 (get-processed-images) deployed — simple ZIP, no dependencies</li>
+      <li><div class="check-box"></div><span class="phase-label">LAMBDA</span> Lambda 2 (ImageProcessor) packaged with Pillow Linux binary using manylinux2014_x86_64 platform flag</li>
+      <li><div class="check-box"></div><span class="phase-label">LAMBDA</span> Lambda 2 deployed with 1024 MB memory and 59 second timeout</li>
+      <li><div class="check-box"></div><span class="phase-label">TRIGGER</span> Lambda invoke permission granted to s3.amazonaws.com</li>
+      <li><div class="check-box"></div><span class="phase-label">TRIGGER</span> S3 bucket notification configured on input bucket → ImageProcessorLambda</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> REST API (v1) created — noted <span class="ic">API_ID</span> and <span class="ic">ROOT_ID</span></li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> /generate-upload-url resource + POST method + Lambda 1 integration</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> /generate-upload-url OPTIONS method with MOCK CORS integration</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> /processed-images/{filename} resource + GET method + Lambda 3 integration</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> /processed-images/{filename} OPTIONS method with MOCK CORS integration</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> Lambda invoke permissions granted to API Gateway for Lambdas 1 and 3</li>
+      <li><div class="check-box"></div><span class="phase-label">API</span> API deployed to "prod" stage — <span class="ic">create-deployment</span> run</li>
+      <li><div class="check-box"></div><span class="phase-label">FRONTEND</span> API_BASE_URL in app.js updated to real API Gateway URL</li>
+      <li><div class="check-box"></div><span class="phase-label">FRONTEND</span> Files synced to frontend bucket with correct content types</li>
+      <li><div class="check-box"></div><span class="phase-label">TEST</span> POST /generate-upload-url returns a pre-signed URL</li>
+      <li><div class="check-box"></div><span class="phase-label">TEST</span> curl PUT to pre-signed URL uploads file to S3</li>
+      <li><div class="check-box"></div><span class="phase-label">TEST</span> Processed files appear in output bucket within 10 seconds</li>
+      <li><div class="check-box"></div><span class="phase-label">TEST</span> GET /processed-images/filename returns 3 download URLs</li>
+      <li><div class="check-box"></div><span class="phase-label">TEST</span> Frontend loads, uploads a real image, downloads work — both JPEG and PNG</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══ SECTION 14 — TALKING POINTS ═══ -->
+<div class="section" id="talking">
+  <div class="section-header"><div class="section-num">14</div><div class="section-title">Talking Points for Interviewers</div></div>
+  <div class="section-body">
+    <div class="tips-grid">
+      <div class="tip-card">
+        <h4>Why pre-signed URLs instead of uploading through API Gateway?</h4>
+        <p>API Gateway has a 10 MB request body limit. Large images would fail. Pre-signed URLs let the browser upload directly to S3 — no size limit, no API Gateway bottleneck, no bandwidth cost through API Gateway. The API just generates the credential, not the data.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Why S3 event trigger instead of the API calling Lambda?</h4>
+        <p>Decoupling. The upload and processing are independent operations. Processing is asynchronous — the user doesn't wait. The same pipeline works regardless of how the image arrives (UI, CLI, another system). Serverless event-driven design: each service does one thing and reacts to events.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Why Pillow at quality 85 and not 100?</h4>
+        <p>JPEG quality is perceptually logarithmic — 85 is visually near-identical to 100 but produces 70–90% smaller files. Quality 100 produces lossless-like files with minimal compression. 85 is the industry standard for web images — Netflix, YouTube, and most CDNs use similar settings.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Why 3 separate S3 buckets?</h4>
+        <p>Separation of concerns + security. Input bucket fires S3 events — it would create an infinite loop if the ImageProcessor wrote back to it. Output bucket needs different CORS (GET only). Frontend needs public read. Mixing them violates least-privilege and creates debugging nightmares.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Why REST API v1 and not HTTP API v2?</h4>
+        <p>REST API v1 was the original choice — it existed before v2 and offers more features (request validation, API keys, usage plans, resource policies). The project predates the v2 adoption. In a greenfield project today, HTTP API v2 would be the better choice for a simple proxy pattern like this — cheaper, simpler CORS, automatic deployment.</p>
+      </div>
+      <div class="tip-card">
+        <h4>How does the PNG transparency fix work?</h4>
+        <p>PNG supports RGBA (with alpha channel). JPEG does not support transparency. PIL raises an error if you try to save RGBA as JPEG. The fix: create a white RGB background canvas, paste the RGBA image using the alpha channel as a mask (transparent pixels become white), then save as JPEG. All formats now supported.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Why 1024 MB memory for ImageProcessor?</h4>
+        <p>Two reasons: (1) A 14 MB JPEG decompressed into raw pixels = ~100-200 MB in RAM. Processing 3 resolutions risks OOM at 128 MB. (2) Lambda CPU is proportional to memory — more memory = more CPU = faster Pillow operations. 1024 MB struck the right balance of speed vs cost for the testing results we saw.</p>
+      </div>
+      <div class="tip-card">
+        <h4>What would you add next?</h4>
+        <p>WebP output (30% smaller than JPEG at same quality). CloudFront CDN in front of both S3 buckets for HTTPS and edge caching. SNS/SQS for async notification when processing completes (instead of the frontend polling and waiting). Custom resolution selection. Batch processing via S3 batch operations.</p>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:1.5rem">
+      <div class="callout-icon">🎯</div>
+      <div class="callout-body"><strong>Narrate every step in an interview:</strong> "I'm creating the input bucket first because the IAM role needs to reference its ARN in the permissions policy. Then I'll create the IAM role so Lambda can be created with permissions. Notice the image never passes through API Gateway — it goes directly from the browser to S3 via the pre-signed URL, which removes the 10 MB Gateway limit entirely." Architecture reasoning out loud = confidence.</div>
+    </div>
+
+    <div class="callout tip" style="margin-top:1rem">
+      <div class="callout-icon">⏱️</div>
+      <div class="callout-body"><strong>Time estimate with all tools pre-installed:</strong> S3 setup 3 min → IAM 2 min → Lambda packaging + deploy 5 min (Pillow download is slow) → S3 trigger 1 min → API Gateway 5 min → Frontend 2 min → Testing 3 min → <strong>~21 minutes total.</strong> The Pillow pip install is the bottleneck — it downloads ~5MB of Linux binaries.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="footer">Image Optimization Pipeline — Interview Redeployment Guide &nbsp;|&nbsp; AWS Lambda · S3 · API Gateway · Pillow · ap-south-1</div>
+</body>
+</html>
