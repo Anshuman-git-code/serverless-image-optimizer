@@ -55,3 +55,12 @@ node_modules/
 # Test files
 test-images/
 *.test.js
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+build/
+
