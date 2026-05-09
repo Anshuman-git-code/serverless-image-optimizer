@@ -1,7 +1,7 @@
 variable "suffix" {
   description = "Your unique name suffix for all S3 bucket names. Must be globally unique."
   type        = string
-  default     = "anshuman"
+  default     = "man"
   # Change "anshuman" to your name/initials when redeploying
   # This replaces the: export SUFFIX="anshuman" shell command
   # that you had to remember to run every terminal session

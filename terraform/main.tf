@@ -1,12 +1,12 @@
 # terraform block — tells Terraform which version to use
 # and which provider plugins to download
 terraform {
-  required_version = ">= 1.0"   # need Terraform 1.0 or newer
+  required_version = ">= 1.0" # need Terraform 1.0 or newer
 
   required_providers {
     aws = {
-      source  = "hashicorp/aws"  # download from Terraform registry
-      version = "~> 5.0"         # use any 5.x version (not 6.x)
+      source  = "hashicorp/aws" # download from Terraform registry
+      version = "~> 5.0"        # use any 5.x version (not 6.x)
     }
   }
 }
@@ -15,7 +15,7 @@ terraform {
 # This is the Terraform equivalent of setting export REGION="ap-south-1"
 # but it applies to every resource automatically
 provider "aws" {
-  region = var.region   # references the variable defined in variables.tf
+  region = var.region # references the variable defined in variables.tf
 }
 
 # locals block — computed values you use in multiple places

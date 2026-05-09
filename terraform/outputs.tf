@@ -26,6 +26,11 @@ output "output_bucket_name" {
   value       = local.output_bucket
 }
 
+output "frontend_bucket_name" {
+  description = "S3 frontend bucket name"
+  value       = local.frontend_bucket
+}
+
 output "lambda_role_arn" {
   description = "IAM role ARN used by all Lambda functions"
   value       = aws_iam_role.lambda_role.arn
